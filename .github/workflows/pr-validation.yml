@@ -34,9 +34,6 @@ jobs:
           path: |
             target/
           key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install dependencies
-        run: |-
-          cargo install
       - name: Build
         run: |-
           cargo build
@@ -58,9 +55,6 @@ jobs:
           path: |
             target/
           key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install dependencies
-        run: |-
-          cargo install
       - name: Test
         run: |-
           cargo test
