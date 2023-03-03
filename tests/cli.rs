@@ -1,24 +1,18 @@
-use assert_cmd::prelude::*; // Add methods on commands
-use predicates::prelude::*; // Used for writing assertions
-use std::process::Command; // Run programs
+#[cfg(test)]
+mod tests {
+    use assert_cmd::Command;
+    use predicates::{prelude::PredicateBooleanExt, str::contains};
 
-#[test]
-fn empty_runs_show_help() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
-
-    cmd.assert()
-        .failure()
-        .stderr(predicate::str::contains("Usage:"));
-    Ok(())
-}
-
-#[test]
-fn build_subcommand_required_directory() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
-
-    cmd.arg("build")
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains("--dir <ROOT_DIRECTORY>"));
-    Ok(())
+    #[test]
+    fn cli_shows_help_with_all_available_commands() {
+        Command::cargo_bin(env!("CARGO_PKG_NAME"))
+            .unwrap()
+            .assert()
+            .failure()
+            .stderr(
+                contains("Usage:")
+                    .and(contains("Commands:"))
+                    .and(contains("Options:")),
+            );
+    }
 }

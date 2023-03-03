@@ -1,28 +1,25 @@
 mod commands;
-use clap::{command, Parser};
-use commands::Commands;
 
-#[derive(Parser, Debug)]
+use clap::{command, Parser};
+use commands::SubCommands;
+
+#[derive(Parser)]
 #[command(
     bin_name = "pd6",
-    about = "A collection of tools to support the creation of the powerd6 system."
+    version,
+    about,
+    long_about = None,
+    arg_required_else_help = true,
 )]
-struct CliArguments {
-    #[arg(
-        short = 'p',
-        long = "preview",
-        help = "This option will describe the steps the tool will take, without actually taking them.",
-        default_value = None,
-        global = true,
-    )]
-    preview: Option<bool>,
+struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: SubCommands,
 }
 pub fn main() {
-    let args = CliArguments::parse();
+    let cli = Cli::parse();
 
-    match args.command {
-        Commands::Build(_) => todo!(),
+    match cli.command {
+        SubCommands::Build(_) => todo!(),
+        SubCommands::Validate => todo!(),
     }
 }

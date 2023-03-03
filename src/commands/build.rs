@@ -1,19 +1,26 @@
 use std::path::PathBuf;
 
-use clap::{command, Args};
+use clap::Args;
 
-#[derive(Debug, Args)]
-#[command(
-    about = "Builds a directory into a powerd6 module.",
-    long_about = "Builds a directory into a powerd6 module. This is a recursive process, so you should use the top-level directory of your project.",
-    arg_required_else_help = true
-)]
-pub struct Command {
+#[derive(Args)]
+pub struct BuildArguments {
     #[arg(
-        short = 'd',
-        long = "dir",
-        help = "The directory to start the building process on.",
-        required = true
+        short,
+        long,
+        help = "The directory to start the building process from"
     )]
-    root_directory: Vec<PathBuf>,
+    root_directory: PathBuf,
+    #[arg(
+        short,
+        long,
+        help = "The name of the output file",
+        default_value = "module",
+    )]
+    output_file_name: String,
+    #[arg(
+        short,
+        long,
+        help = "Whether to execute the actions, or just describe them to verify what is about to be executed."
+    )]
+    dry_run: bool,
 }

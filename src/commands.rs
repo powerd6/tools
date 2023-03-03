@@ -1,8 +1,13 @@
 use clap::Subcommand;
 
-pub mod build;
+mod build;
 
-#[derive(Debug, Subcommand)]
-pub enum Commands {
-    Build(build::Command),
+#[derive(Subcommand)]
+pub enum SubCommands {
+    #[command(
+        about = "Recursively build a directory into a module",
+        arg_required_else_help = true,
+    )]
+    Build(build::BuildArguments),
+    Validate,
 }
