@@ -1,6 +1,7 @@
 use clap::Subcommand;
 
-mod build;
+pub(crate) mod build;
+pub(crate) mod validate;
 
 #[derive(Subcommand)]
 pub enum SubCommands {
@@ -9,5 +10,9 @@ pub enum SubCommands {
         arg_required_else_help = true,
     )]
     Build(build::BuildArguments),
-    Validate,
+    #[command(
+        about = "Validates a module",
+        arg_required_else_help = true,
+    )]
+    Validate(validate::ValidateArguments),
 }

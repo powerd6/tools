@@ -2,6 +2,8 @@ mod commands;
 
 use clap::{command, Parser};
 use commands::SubCommands;
+use commands::build::build_modules;
+use commands::validate::validate_module;
 
 #[derive(Parser)]
 #[command(
@@ -19,7 +21,7 @@ pub fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        SubCommands::Build(_) => todo!(),
-        SubCommands::Validate => todo!(),
+        SubCommands::Build(args) => build_modules(args),
+        SubCommands::Validate(args) => validate_module(args),
     }
 }
