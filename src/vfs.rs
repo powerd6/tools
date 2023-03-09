@@ -1,25 +1,26 @@
 use log::warn;
+use walkdir::WalkDir;
 
 /// VFS (Virtual File System) is an abstraction on top of the actual file system.
 /// It serves as a layer of abstraction and allows for manipulation of files without touching the disk.
 use crate::errors::ErrorCodes;
 
-use std::path::PathBuf;
+use std::{collections::BTreeSet, fs::read_dir, path::PathBuf};
 
 #[derive(Debug)]
 pub(crate) struct VirtualFileSystem {
-    pub(crate) types: Option<Vec<VirtualFileMapping>>,
-    pub(crate) contents: Option<Vec<VirtualFileMapping>>,
+    pub(crate) types: Option<BTreeSet<VirtualFileMapping>>,
+    pub(crate) contents: Option<BTreeSet<VirtualFileMapping>>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
 pub(crate) enum VirtualFileMapping {
     SingleFile {
         file_path: PathBuf,
     },
     Directory {
         root_file: PathBuf,
-        extra_files: Vec<PathBuf>,
+        extra_files: BTreeSet<PathBuf>,
     },
 }
 
@@ -36,9 +37,36 @@ pub(crate) fn map_directory_to_module(
     })
 }
 
-fn map_types_directory(types_directory_path: PathBuf) -> Option<Vec<VirtualFileMapping>> {
+fn map_types_directory(types_directory_path: PathBuf) -> Option<BTreeSet<VirtualFileMapping>> {
     match (types_directory_path.exists(), types_directory_path.is_dir()) {
-        (true, true) => todo!(),
+        (true, true) => {
+            let mut results: BTreeSet<VirtualFileMapping> = BTreeSet::new();
+
+            for entry in read_dir(types_directory_path)
+                .into_iter()
+                .flatten()
+                .flat_map(|e| e.ok())
+            {
+                let path = entry.path();
+                if path.is_file() {
+                    results.insert(VirtualFileMapping::SingleFile { file_path: path });
+                } else if path.is_dir() {
+                    let underscore_file = path.join("_.json");
+                    results.insert(VirtualFileMapping::Directory {
+                        root_file: underscore_file,
+                        extra_files: WalkDir::new(path)
+                            .max_depth(2)
+                            .into_iter()
+                            .flatten()
+                            .map(|e| e.into_path())
+                            .filter(|p| p.is_file())
+                            .filter(|f| f.file_stem().unwrap() != "_")
+                            .collect(),
+                    });
+                }
+            }
+            Some(results)
+        }
         (true, false) => {
             warn!("Unable to process `types`. Expected a directory, but found a file instead.");
             None
@@ -54,6 +82,7 @@ fn map_types_directory(types_directory_path: PathBuf) -> Option<Vec<VirtualFileM
 mod tests {
     use super::*;
     use log::Level;
+    use pretty_assertions::assert_eq;
     use testdir::testdir;
 
     #[test]
@@ -107,15 +136,15 @@ mod tests {
 
         assert_eq!(
             map_types_directory(dir).unwrap(),
-            vec![
+            BTreeSet::from([
                 VirtualFileMapping::SingleFile {
                     file_path: single_type_path
                 },
                 VirtualFileMapping::Directory {
                     root_file: nested_underscore_path,
-                    extra_files: vec![nested_description_path]
+                    extra_files: BTreeSet::from([nested_description_path])
                 }
-            ]
+            ])
         )
     }
 }

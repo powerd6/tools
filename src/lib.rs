@@ -9,7 +9,10 @@ pub fn build_module(
     output_file_name: String,
 ) -> Result<(), ErrorCodes> {
     println!("Building module from {}", root_directory_path.display());
-    println!("Mapped directory into VFS: {:#?}", map_directory_to_module(root_directory_path));
+    println!(
+        "Mapped directory into VFS: {:#?}",
+        map_directory_to_module(root_directory_path)
+    );
     println!("Saving module to {}", output_file_name);
     Ok(())
 }
