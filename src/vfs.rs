@@ -2,11 +2,9 @@ use log::warn;
 
 /// VFS (Virtual File System) is an abstraction on top of the actual file system.
 /// It serves as a layer of abstraction and allows for manipulation of files without touching the disk.
-
 use crate::errors::ErrorCodes;
 
 use std::path::PathBuf;
-
 
 #[derive(Debug)]
 pub(crate) struct VirtualFileSystem {
@@ -14,23 +12,28 @@ pub(crate) struct VirtualFileSystem {
     pub(crate) contents: Option<Vec<VirtualFileMapping>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) enum VirtualFileMapping {
     SingleFile {
         file_path: PathBuf,
     },
     Directory {
         root_file: PathBuf,
-        extra_files: Vec<PathBuf>
-    }
+        extra_files: Vec<PathBuf>,
+    },
 }
 
 /// Traverses a directory recursively, creating a virtual representation of which files should be mapped into content and types
-pub(crate) fn map_directory_to_module(root_directory_path: PathBuf) -> Result<VirtualFileSystem, ErrorCodes> {
+pub(crate) fn map_directory_to_module(
+    root_directory_path: PathBuf,
+) -> Result<VirtualFileSystem, ErrorCodes> {
     let types_subdirectory_path_fragment = PathBuf::from("./types");
     let types_directory: PathBuf = root_directory_path.join(types_subdirectory_path_fragment);
 
-    Ok(VirtualFileSystem { types: map_types_directory(types_directory), contents: None })
+    Ok(VirtualFileSystem {
+        types: map_types_directory(types_directory),
+        contents: None,
+    })
 }
 
 fn map_types_directory(types_directory_path: PathBuf) -> Option<Vec<VirtualFileMapping>> {
@@ -39,11 +42,11 @@ fn map_types_directory(types_directory_path: PathBuf) -> Option<Vec<VirtualFileM
         (true, false) => {
             warn!("Unable to process `types`. Expected a directory, but found a file instead.");
             None
-        },
+        }
         (false, _) => {
             warn!("Did not find the `types` directory.");
             None
-        },
+        }
     }
 }
 
@@ -57,10 +60,10 @@ mod tests {
     fn mapping_types_fails_on_non_existing_directories() {
         testing_logger::setup();
 
-        let empty_dir : PathBuf = testdir!();
+        let empty_dir: PathBuf = testdir!();
 
         assert!(map_types_directory(empty_dir.join("something")).is_none());
-        testing_logger::validate( |captured_logs| {
+        testing_logger::validate(|captured_logs| {
             assert_eq!(captured_logs.len(), 1);
             assert_eq!(captured_logs[0].body, "Did not find the `types` directory.");
             assert_eq!(captured_logs[0].level, Level::Warn);
@@ -71,15 +74,48 @@ mod tests {
     fn mapping_types_fails_on_non_directories() {
         testing_logger::setup();
 
-        let dir : PathBuf = testdir!();
+        let dir: PathBuf = testdir!();
         let file = dir.join("file.txt");
         std::fs::write(&file, "something").ok();
 
         assert!(map_types_directory(file).is_none());
-        testing_logger::validate( |captured_logs| {
+        testing_logger::validate(|captured_logs| {
             assert_eq!(captured_logs.len(), 1);
-            assert_eq!(captured_logs[0].body, "Unable to process `types`. Expected a directory, but found a file instead.");
+            assert_eq!(
+                captured_logs[0].body,
+                "Unable to process `types`. Expected a directory, but found a file instead."
+            );
             assert_eq!(captured_logs[0].level, Level::Warn);
         });
+    }
+
+    #[test]
+    fn mapping_types_reads_directory_correctly() {
+        testing_logger::setup();
+
+        let dir: PathBuf = testdir!();
+
+        let single_type_path = dir.join("single_type.json");
+        std::fs::write(&single_type_path, "").ok();
+
+        let directory_type_dir = dir.join("directory_type");
+        std::fs::create_dir(&directory_type_dir).ok();
+        let nested_underscore_path = directory_type_dir.join("_.json");
+        std::fs::write(&nested_underscore_path, "").ok();
+        let nested_description_path = directory_type_dir.join("description.txt");
+        std::fs::write(&nested_description_path, "").ok();
+
+        assert_eq!(
+            map_types_directory(dir).unwrap(),
+            vec![
+                VirtualFileMapping::SingleFile {
+                    file_path: single_type_path
+                },
+                VirtualFileMapping::Directory {
+                    root_file: nested_underscore_path,
+                    extra_files: vec![nested_description_path]
+                }
+            ]
+        )
     }
 }
