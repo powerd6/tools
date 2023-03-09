@@ -134,6 +134,15 @@ mod tests {
         let nested_description_path = directory_type_dir.join("description.txt");
         std::fs::write(&nested_description_path, "").ok();
 
+        let another_directory_type_dir = dir.join("another_directory_type");
+        std::fs::create_dir(&another_directory_type_dir).ok();
+        let another_nested_underscore_path = another_directory_type_dir.join("_.json");
+        std::fs::write(&another_nested_underscore_path, "").ok();
+        let nested_rendering_dir = another_directory_type_dir.join("rendering");
+        std::fs::create_dir(&nested_rendering_dir).ok();
+        let nested_template_path = nested_rendering_dir.join("txt.hjs");
+        std::fs::write(&nested_template_path, "").ok();
+
         assert_eq!(
             map_types_directory(dir).unwrap(),
             BTreeSet::from([
@@ -143,6 +152,10 @@ mod tests {
                 VirtualFileMapping::Directory {
                     root_file: nested_underscore_path,
                     extra_files: BTreeSet::from([nested_description_path])
+                },
+                VirtualFileMapping::Directory {
+                    root_file: another_nested_underscore_path,
+                    extra_files: BTreeSet::from([nested_template_path])
                 }
             ])
         )
