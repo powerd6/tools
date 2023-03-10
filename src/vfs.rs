@@ -34,11 +34,16 @@ pub(crate) fn map_directory_to_module(
     root_directory_path: PathBuf,
 ) -> Result<VirtualFileSystem, ErrorCodes> {
     let types_directory: PathBuf = root_directory_path.join(TYPES_DIRECTORY);
+    let contents_directory: PathBuf = root_directory_path.join(CONTENTS_DIRECTORY);
 
     Ok(VirtualFileSystem {
         types: map_types_directory(types_directory),
-        contents: None,
+        contents: map_contents_directory(contents_directory),
     })
+}
+
+fn map_contents_directory(contents_directory: PathBuf) -> Option<BTreeSet<VirtualFileMapping>> {
+    todo!()
 }
 
 fn map_types_directory(types_directory_path: PathBuf) -> Option<BTreeSet<VirtualFileMapping>> {
