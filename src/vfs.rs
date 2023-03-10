@@ -24,12 +24,16 @@ pub(crate) enum VirtualFileMapping {
     },
 }
 
+const TYPES_DIRECTORY: &str = "types";
+const CONTENTS_DIRECTORY: &str = "contents";
+const UNDERSCORE_FILE_NAME: &str = "_.json";
+const RENDERING_DIRECTORY: &str = "rendering";
+
 /// Traverses a directory recursively, creating a virtual representation of which files should be mapped into content and types
 pub(crate) fn map_directory_to_module(
     root_directory_path: PathBuf,
 ) -> Result<VirtualFileSystem, ErrorCodes> {
-    let types_subdirectory_path_fragment = PathBuf::from("./types");
-    let types_directory: PathBuf = root_directory_path.join(types_subdirectory_path_fragment);
+    let types_directory: PathBuf = root_directory_path.join(TYPES_DIRECTORY);
 
     Ok(VirtualFileSystem {
         types: map_types_directory(types_directory),
@@ -51,28 +55,48 @@ fn map_types_directory(types_directory_path: PathBuf) -> Option<BTreeSet<Virtual
                 if path.is_file() {
                     results.insert(VirtualFileMapping::SingleFile { file_path: path });
                 } else if path.is_dir() {
-                    let underscore_file = path.join("_.json");
-                    results.insert(VirtualFileMapping::Directory {
-                        root_file: underscore_file,
-                        extra_files: WalkDir::new(path)
-                            .max_depth(2)
-                            .into_iter()
-                            .flatten()
-                            .map(|e| e.into_path())
-                            .filter(|p| p.is_file())
-                            .filter(|f| f.file_stem().unwrap() != "_")
-                            .collect(),
-                    });
+                    let underscore_file = path.join(UNDERSCORE_FILE_NAME);
+                    match underscore_file.exists() {
+                        true => {
+                            let sibling_files = read_dir(path.clone())
+                                .into_iter()
+                                .flatten()
+                                .filter_map(|e| e.ok())
+                                .map(|e| e.path())
+                                .filter(|f| f.is_file())
+                                .filter(|f| !f.ends_with(UNDERSCORE_FILE_NAME));
+
+                            let rendering_files = read_dir(path.join(RENDERING_DIRECTORY))
+                                .into_iter()
+                                .flatten()
+                                .filter_map(|e| e.ok())
+                                .map(|e| e.path())
+                                .filter(|f| f.is_file());
+
+                            results.insert(VirtualFileMapping::Directory {
+                                root_file: underscore_file,
+                                extra_files: BTreeSet::from_iter(
+                                    sibling_files.chain(rendering_files),
+                                ),
+                            });
+                        }
+                        false => {
+                            warn!("Found ")
+                        }
+                    }
                 }
             }
             Some(results)
         }
         (true, false) => {
-            warn!("Unable to process `types`. Expected a directory, but found a file instead.");
+            warn!(
+                "Unable to process `{}`. Expected a directory, but found a file instead.",
+                TYPES_DIRECTORY
+            );
             None
         }
         (false, _) => {
-            warn!("Did not find the `types` directory.");
+            warn!("Did not find the `{}` directory.", TYPES_DIRECTORY);
             None
         }
     }
@@ -94,7 +118,10 @@ mod tests {
         assert!(map_types_directory(empty_dir.join("something")).is_none());
         testing_logger::validate(|captured_logs| {
             assert_eq!(captured_logs.len(), 1);
-            assert_eq!(captured_logs[0].body, "Did not find the `types` directory.");
+            assert_eq!(
+                captured_logs[0].body,
+                format!("Did not find the `{}` directory.", TYPES_DIRECTORY)
+            );
             assert_eq!(captured_logs[0].level, Level::Warn);
         });
     }
@@ -112,7 +139,10 @@ mod tests {
             assert_eq!(captured_logs.len(), 1);
             assert_eq!(
                 captured_logs[0].body,
-                "Unable to process `types`. Expected a directory, but found a file instead."
+                format!(
+                    "Unable to process `{}`. Expected a directory, but found a file instead.",
+                    TYPES_DIRECTORY
+                )
             );
             assert_eq!(captured_logs[0].level, Level::Warn);
         });
@@ -129,19 +159,24 @@ mod tests {
 
         let directory_type_dir = dir.join("directory_type");
         std::fs::create_dir(&directory_type_dir).ok();
-        let nested_underscore_path = directory_type_dir.join("_.json");
+        let nested_underscore_path = directory_type_dir.join(UNDERSCORE_FILE_NAME);
         std::fs::write(&nested_underscore_path, "").ok();
         let nested_description_path = directory_type_dir.join("description.txt");
         std::fs::write(&nested_description_path, "").ok();
 
         let another_directory_type_dir = dir.join("another_directory_type");
         std::fs::create_dir(&another_directory_type_dir).ok();
-        let another_nested_underscore_path = another_directory_type_dir.join("_.json");
+        let another_nested_underscore_path = another_directory_type_dir.join(UNDERSCORE_FILE_NAME);
         std::fs::write(&another_nested_underscore_path, "").ok();
-        let nested_rendering_dir = another_directory_type_dir.join("rendering");
+        let nested_rendering_dir = another_directory_type_dir.join(RENDERING_DIRECTORY);
         std::fs::create_dir(&nested_rendering_dir).ok();
         let nested_template_path = nested_rendering_dir.join("txt.hjs");
         std::fs::write(&nested_template_path, "").ok();
+        // Following should be ignored because type mapping only looks one level deep
+        let unmapped_folder = another_directory_type_dir.join("ignored_folder");
+        std::fs::create_dir(unmapped_folder).ok();
+        let unmapped_folder_in_rendering = nested_rendering_dir.join("ignored_folder");
+        std::fs::create_dir(unmapped_folder_in_rendering).ok();
 
         assert_eq!(
             map_types_directory(dir).unwrap(),
