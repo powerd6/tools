@@ -43,7 +43,20 @@ pub(crate) fn map_directory_to_module(
 }
 
 fn map_contents_directory(contents_directory: PathBuf) -> Option<BTreeSet<VirtualFileMapping>> {
-    todo!()
+    match (contents_directory.exists(), contents_directory.is_dir()) {
+        (true, true) => todo!(),
+        (true, false) => {
+            warn!(
+                "Unable to process `{}`. Expected a directory, but found a file instead.",
+                CONTENTS_DIRECTORY
+            );
+            None
+        }
+        (false, _) => {
+            warn!("Did not find the `{}` directory.", CONTENTS_DIRECTORY);
+            None
+        }
+    }
 }
 
 fn map_types_directory(types_directory_path: PathBuf) -> Option<BTreeSet<VirtualFileMapping>> {
@@ -200,4 +213,44 @@ mod tests {
             ])
         )
     }
+
+    #[test]
+    fn mapping_contents_fails_on_non_existing_directories() {
+        testing_logger::setup();
+
+        let empty_dir: PathBuf = testdir!();
+
+        assert!(map_contents_directory(empty_dir.join("something")).is_none());
+        testing_logger::validate(|captured_logs| {
+            assert_eq!(captured_logs.len(), 1);
+            assert_eq!(
+                captured_logs[0].body,
+                format!("Did not find the `{}` directory.", CONTENTS_DIRECTORY)
+            );
+            assert_eq!(captured_logs[0].level, Level::Warn);
+        });
+    }
+
+    #[test]
+    fn mapping_contents_fails_on_non_directories() {
+        testing_logger::setup();
+
+        let dir: PathBuf = testdir!();
+        let file = dir.join("file.txt");
+        std::fs::write(&file, "something").ok();
+
+        assert!(map_contents_directory(file).is_none());
+        testing_logger::validate(|captured_logs| {
+            assert_eq!(captured_logs.len(), 1);
+            assert_eq!(
+                captured_logs[0].body,
+                format!(
+                    "Unable to process `{}`. Expected a directory, but found a file instead.",
+CONTENTS_DIRECTORY                )
+            );
+            assert_eq!(captured_logs[0].level, Level::Warn);
+        });
+    }
+
+
 }
