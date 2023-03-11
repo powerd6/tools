@@ -1,9 +1,7 @@
-use log::warn;
-use walkdir::WalkDir;
-
+use crate::errors::ErrorCodes;
 /// VFS (Virtual File System) is an abstraction on top of the actual file system.
 /// It serves as a layer of abstraction and allows for manipulation of files without touching the disk.
-use crate::errors::ErrorCodes;
+use log::warn;
 
 use std::{collections::BTreeSet, fs::read_dir, path::PathBuf};
 
@@ -44,7 +42,35 @@ pub(crate) fn map_directory_to_module(
 
 fn map_contents_directory(contents_directory: PathBuf) -> Option<BTreeSet<VirtualFileMapping>> {
     match (contents_directory.exists(), contents_directory.is_dir()) {
-        (true, true) => todo!(),
+        (true, true) => {
+            let mut results: BTreeSet<VirtualFileMapping> = BTreeSet::new();
+            for path in get_paths_in_directory(&contents_directory) {
+                if path.is_file() {
+                    results.insert(VirtualFileMapping::SingleFile { file_path: path });
+                } else if path.is_dir() {
+                    let underscore_file = path.join(UNDERSCORE_FILE_NAME);
+                    match underscore_file.exists() {
+                        true => {
+                            results.insert(VirtualFileMapping::Directory {
+                                root_file: underscore_file,
+                                extra_files: BTreeSet::from_iter(
+                                    get_paths_in_directory(&path)
+                                        .filter(|e| e.is_file())
+                                        .filter(|f| !f.ends_with(UNDERSCORE_FILE_NAME)),
+                                ),
+                            });
+                        }
+                        false => get_paths_in_directory(&path)
+                            .filter(|e| e.is_file())
+                            .for_each(|f| {
+                                results.insert(VirtualFileMapping::SingleFile { file_path: f });
+                            }),
+                    };
+                    todo!("Look for subfolders and map them accordingly");
+                }
+            }
+            Some(results)
+        }
         (true, false) => {
             warn!(
                 "Unable to process `{}`. Expected a directory, but found a file instead.",
@@ -64,32 +90,20 @@ fn map_types_directory(types_directory_path: PathBuf) -> Option<BTreeSet<Virtual
         (true, true) => {
             let mut results: BTreeSet<VirtualFileMapping> = BTreeSet::new();
 
-            for entry in read_dir(types_directory_path)
-                .into_iter()
-                .flatten()
-                .flat_map(|e| e.ok())
-            {
-                let path = entry.path();
+            for path in get_paths_in_directory(&types_directory_path) {
                 if path.is_file() {
                     results.insert(VirtualFileMapping::SingleFile { file_path: path });
                 } else if path.is_dir() {
                     let underscore_file = path.join(UNDERSCORE_FILE_NAME);
                     match underscore_file.exists() {
                         true => {
-                            let sibling_files = read_dir(path.clone())
-                                .into_iter()
-                                .flatten()
-                                .filter_map(|e| e.ok())
-                                .map(|e| e.path())
+                            let sibling_files = get_paths_in_directory(&path)
                                 .filter(|f| f.is_file())
                                 .filter(|f| !f.ends_with(UNDERSCORE_FILE_NAME));
 
-                            let rendering_files = read_dir(path.join(RENDERING_DIRECTORY))
-                                .into_iter()
-                                .flatten()
-                                .filter_map(|e| e.ok())
-                                .map(|e| e.path())
-                                .filter(|f| f.is_file());
+                            let rendering_files =
+                                get_paths_in_directory(&path.join(RENDERING_DIRECTORY))
+                                    .filter(|f| f.is_file());
 
                             results.insert(VirtualFileMapping::Directory {
                                 root_file: underscore_file,
@@ -118,6 +132,14 @@ fn map_types_directory(types_directory_path: PathBuf) -> Option<BTreeSet<Virtual
             None
         }
     }
+}
+
+fn get_paths_in_directory(directory_path: &PathBuf) -> impl Iterator<Item = PathBuf> {
+    read_dir(directory_path)
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
 }
 
 #[cfg(test)]
@@ -246,11 +268,65 @@ mod tests {
                 captured_logs[0].body,
                 format!(
                     "Unable to process `{}`. Expected a directory, but found a file instead.",
-CONTENTS_DIRECTORY                )
+                    CONTENTS_DIRECTORY
+                )
             );
             assert_eq!(captured_logs[0].level, Level::Warn);
         });
     }
 
+    // TODO: Need a better way to create nested test directories for unit testing.
 
+    #[test]
+    fn mapping_contents_reads_directory_correctly() {
+        testing_logger::setup();
+
+        let dir: PathBuf = testdir!();
+
+        let single_content_path = dir.join("single_content.json");
+        std::fs::write(&single_content_path, "").ok();
+
+        let directory_content_dir = dir.join("directory_content");
+        std::fs::create_dir(&directory_content_dir).ok();
+        let nested_underscore_path = directory_content_dir.join(UNDERSCORE_FILE_NAME);
+        std::fs::write(&nested_underscore_path, "").ok();
+        let nested_description_path = directory_content_dir.join("description.txt");
+        std::fs::write(&nested_description_path, "").ok();
+
+        let another_directory_content_dir = dir.join("another_directory_content");
+        std::fs::create_dir(&another_directory_content_dir).ok();
+        let another_nested_underscore_path =
+            another_directory_content_dir.join(UNDERSCORE_FILE_NAME);
+        std::fs::write(&another_nested_underscore_path, "").ok();
+        let another_nested_path = another_directory_content_dir.join("description.txt");
+        std::fs::write(&another_nested_path, "").ok();
+
+        let deeply_nested_directory = another_directory_content_dir.join("deeper");
+        std::fs::create_dir(&deeply_nested_directory).ok();
+        let deeply_nested_underscore_path = deeply_nested_directory.join(UNDERSCORE_FILE_NAME);
+        std::fs::write(&deeply_nested_underscore_path, "").ok();
+        let deeply_nested_path = deeply_nested_directory.join("description.txt");
+        std::fs::write(&deeply_nested_path, "").ok();
+
+        assert_eq!(
+            map_contents_directory(dir).unwrap(),
+            BTreeSet::from([
+                VirtualFileMapping::SingleFile {
+                    file_path: single_content_path
+                },
+                VirtualFileMapping::Directory {
+                    root_file: nested_underscore_path,
+                    extra_files: BTreeSet::from([nested_description_path])
+                },
+                VirtualFileMapping::Directory {
+                    root_file: another_nested_underscore_path,
+                    extra_files: BTreeSet::from([another_nested_path])
+                },
+                VirtualFileMapping::Directory {
+                    root_file: deeply_nested_underscore_path,
+                    extra_files: BTreeSet::from([deeply_nested_path])
+                },
+            ])
+        )
+    }
 }
