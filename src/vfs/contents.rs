@@ -1,4 +1,4 @@
-use log::{debug, warn};
+use log::{warn};
 
 use std::collections::BTreeSet;
 
