@@ -1,16 +1,15 @@
-/// VFS (Virtual File System) is an abstraction on top of the actual file system.
-/// It serves as a layer of abstraction and allows for manipulation of files without touching the disk.
 
-use crate::errors::ErrorCodes;
 use std::{collections::BTreeSet, fs::read_dir, path::PathBuf};
+
+use self::{contents::map_contents_directory, types::map_types_directory};
 
 mod contents;
 mod types;
 
 #[derive(Debug)]
 pub(crate) struct VirtualFileSystem {
-    pub(crate) types: Option<BTreeSet<VirtualFileMapping>>,
-    pub(crate) contents: Option<BTreeSet<VirtualFileMapping>>,
+    pub(crate) types: BTreeSet<VirtualFileMapping>,
+    pub(crate) contents: BTreeSet<VirtualFileMapping>,
 }
 
 #[derive(Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
@@ -32,14 +31,11 @@ const RENDERING_DIRECTORY: &str = "rendering";
 /// Traverses a directory recursively, creating a virtual representation of which files should be mapped into content and types
 pub(crate) fn map_directory_to_module(
     root_directory_path: &PathBuf,
-) -> Result<VirtualFileSystem, ErrorCodes> {
-    let types_directory: PathBuf = root_directory_path.join(TYPES_DIRECTORY);
-    let contents_directory: PathBuf = root_directory_path.join(CONTENTS_DIRECTORY);
-
-    Ok(VirtualFileSystem {
-        types: types::map_types_directory(&types_directory),
-        contents: contents::map_contents_directory(&contents_directory),
-    })
+) -> VirtualFileSystem {
+    VirtualFileSystem {
+        types: map_types_directory(&root_directory_path.join(TYPES_DIRECTORY)).unwrap_or_default(),
+        contents: map_contents_directory(&root_directory_path.join(CONTENTS_DIRECTORY)).unwrap_or_default(),
+    }
 }
 
 fn get_paths_in_directory(directory_path: &PathBuf) -> impl Iterator<Item = PathBuf> {

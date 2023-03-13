@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 
 use std::path::PathBuf;
 
-use crate::vfs::TYPES_DIRECTORY;
+use crate::{vfs::TYPES_DIRECTORY, errors::ErrorCodes};
 
 use super::{
     get_paths_in_directory, VirtualFileMapping, RENDERING_DIRECTORY, UNDERSCORE_FILE_NAME,
@@ -12,7 +12,7 @@ use super::{
 
 pub(crate) fn map_types_directory(
     types_directory_path: &PathBuf,
-) -> Option<BTreeSet<VirtualFileMapping>> {
+) -> Result<BTreeSet<VirtualFileMapping>, ErrorCodes> {
     match (types_directory_path.exists(), types_directory_path.is_dir()) {
         (true, true) => {
             let mut results: BTreeSet<VirtualFileMapping> = BTreeSet::new();
@@ -45,18 +45,18 @@ pub(crate) fn map_types_directory(
                     }
                 }
             }
-            Some(results)
+            Ok(results)
         }
         (true, false) => {
             warn!(
                 "Unable to process `{}`. Expected a directory, but found a file instead.",
                 TYPES_DIRECTORY
             );
-            None
+            Err(ErrorCodes::FoundFileInsteadOfDirectory)
         }
         (false, _) => {
             warn!("Did not find the `{}` directory.", TYPES_DIRECTORY);
-            None
+            Err(ErrorCodes::DirectoryNotFound)
         }
     }
 }
@@ -74,7 +74,7 @@ mod tests {
 
         let empty_dir: PathBuf = testdir!();
 
-        assert!(map_types_directory(&empty_dir.join("something")).is_none());
+        assert_eq!(map_types_directory(&empty_dir.join("something")).err().unwrap(), ErrorCodes::DirectoryNotFound);
         testing_logger::validate(|captured_logs| {
             assert_eq!(captured_logs.len(), 1);
             assert_eq!(
@@ -93,7 +93,7 @@ mod tests {
         let file = dir.join("file.txt");
         std::fs::write(&file, "something").ok();
 
-        assert!(map_types_directory(&file).is_none());
+        assert_eq!(map_types_directory(&file).err().unwrap(), ErrorCodes::FoundFileInsteadOfDirectory);
         testing_logger::validate(|captured_logs| {
             assert_eq!(captured_logs.len(), 1);
             assert_eq!(

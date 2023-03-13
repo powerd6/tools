@@ -4,13 +4,13 @@ use std::collections::BTreeSet;
 
 use std::path::PathBuf;
 
-use crate::vfs::CONTENTS_DIRECTORY;
+use crate::{vfs::CONTENTS_DIRECTORY, errors::ErrorCodes};
 
 use super::{get_paths_in_directory, VirtualFileMapping, UNDERSCORE_FILE_NAME};
 
 pub(crate) fn map_contents_directory(
     contents_directory: &PathBuf,
-) -> Option<BTreeSet<VirtualFileMapping>> {
+) -> Result<BTreeSet<VirtualFileMapping>, ErrorCodes> {
     match (contents_directory.exists(), contents_directory.is_dir()) {
         (true, true) => {
             let mut results: BTreeSet<VirtualFileMapping> = BTreeSet::new();
@@ -58,18 +58,18 @@ pub(crate) fn map_contents_directory(
                     }
                 }
             }
-            Some(results)
+            Ok(results)
         }
         (true, false) => {
             warn!(
                 "Unable to process `{}`. Expected a directory, but found a file instead.",
                 CONTENTS_DIRECTORY
             );
-            None
+            Err(ErrorCodes::FoundFileInsteadOfDirectory)
         }
         (false, _) => {
             warn!("Did not find the `{}` directory.", CONTENTS_DIRECTORY);
-            None
+            Err(ErrorCodes::DirectoryNotFound)
         }
     }
 }
@@ -87,7 +87,7 @@ mod tests {
 
         let empty_dir: PathBuf = testdir!();
 
-        assert!(map_contents_directory(&empty_dir.join("something")).is_none());
+        assert_eq!(map_contents_directory(&empty_dir.join("something")).err().unwrap(), ErrorCodes::DirectoryNotFound);
         testing_logger::validate(|captured_logs| {
             assert_eq!(captured_logs.len(), 1);
             assert_eq!(
@@ -106,7 +106,7 @@ mod tests {
         let file = dir.join("file.txt");
         std::fs::write(&file, "something").ok();
 
-        assert!(map_contents_directory(&file).is_none());
+        assert_eq!(map_contents_directory(&file).err().unwrap(), ErrorCodes::FoundFileInsteadOfDirectory);
         testing_logger::validate(|captured_logs| {
             assert_eq!(captured_logs.len(), 1);
             assert_eq!(

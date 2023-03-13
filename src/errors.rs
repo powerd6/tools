@@ -1,4 +1,6 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ErrorCodes {
-    FatalError = 2,
+    FatalError,
+    FoundFileInsteadOfDirectory,
+    DirectoryNotFound,
 }
