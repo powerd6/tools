@@ -17,9 +17,13 @@ struct Cli {
 
 #[derive(Clone, ValueEnum)]
 enum LogLevel {
+    /// Shows pertinent information or errors to users
     Info,
+    /// Includes non-fatal issues and warnings
     Warn,
+    /// Useful to debug execution and inspect internal flow
     Debug,
+    /// Extra verbosity, including contributor-centric traces and signals
     Trace,
 }
 
