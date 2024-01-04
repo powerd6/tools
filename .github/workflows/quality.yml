@@ -1,0 +1,46 @@
+name: Quality
+
+concurrency:
+    cancel-in-progress: true
+    group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+
+on:
+    push:
+      branches:
+        - main
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+  action-lint:
+    name: Action Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Actionlint
+      id: get_actionlint
+      run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+    - name: Run Actionlint
+      run: ${{ steps.get_actionlint.outputs.executable }} -color
+  format:
+    name: Rust Format
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: moonrepo/setup-rust@v1
+      with:
+        components: rustfmt
+    - name: Check formatting
+      run: cargo fmt --all --check
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: moonrepo/setup-rust@v1
+      with:
+        components: rustfmt
+    - name: Check clippy
+      run: cargo clippy --tests --all-features -- --deny warnings
