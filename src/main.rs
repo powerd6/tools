@@ -7,12 +7,12 @@ use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode};
 #[derive(Parser)]
 #[command(version, about)]
 struct Cli {
-    #[command(subcommand)]
-    command: Commands,
-
     /// Turn debugging information on
-    #[arg(short, long, value_enum, default_value_t=LogLevel::Info)]
+    #[arg(short, long, global=true, value_enum, default_value_t=LogLevel::Info)]
     log_level: LogLevel,
+
+    #[command(subcommand, )]
+    command: Commands,
 }
 
 #[derive(Clone, ValueEnum)]
