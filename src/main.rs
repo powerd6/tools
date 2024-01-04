@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use log::{LevelFilter, trace};
+use log::{LevelFilter, trace, error, debug};
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode};
 
 #[derive(Parser)]
@@ -60,5 +60,16 @@ fn main() {
         ColorChoice::Auto,
     )])
     .unwrap();
-    trace!("Loggers initialized!")
+    trace!("Loggers initialized!");
+
+    match &cli.command {
+        Commands::Assemble { config } => {
+            trace!("Executing assemble");
+            debug!("Open config directory");
+            debug!("Assemble module information");
+            debug!("Assemble authorship information");
+            debug!("Assemble schema information");
+            debug!("Assemble content information");
+        },
+    }
 }
