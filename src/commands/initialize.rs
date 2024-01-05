@@ -152,7 +152,7 @@ mod tests {
             config: PathBuf::new(),
             file_type: FileType::Json,
         }
-        .initialize_module_file(PathBuf::new(), &mock_fs);
+        .initialize_module_file(&PathBuf::new(), &mock_fs);
     }
 
     #[test]
@@ -165,6 +165,6 @@ mod tests {
             config: PathBuf::new(),
             file_type: FileType::Json,
         }
-        .initialize_module_file(PathBuf::new(), &mock_fs);
+        .initialize_module_file(&PathBuf::new(), &mock_fs);
     }
 }
