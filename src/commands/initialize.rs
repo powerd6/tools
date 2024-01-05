@@ -16,7 +16,7 @@ pub(crate) struct Initialize {
 }
 
 impl<F: FileSystem> Command<F> for Initialize {
-    fn execute(&self,fs: &F) {
+    fn execute(&self, fs: &F) {
         trace!("Executing initialize");
         // Create directory if it doesn't already exist
         let root = if fs.dir_exists(&self.config) {
@@ -29,5 +29,41 @@ impl<F: FileSystem> Command<F> for Initialize {
         debug!("Create authors directory");
         debug!("Create schema directory");
         debug!("Create contents directory");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use crate::{commands::Command, file_system::MockFileSystem};
+
+    use super::Initialize;
+
+    #[test]
+    fn test_it_creates_directory_when_needed() {
+        let mut mock_fs = MockFileSystem::new();
+        mock_fs.expect_dir_exists().once().return_const(false);
+        mock_fs
+            .expect_create_dir()
+            .once()
+            .returning(|_| Ok(PathBuf::new()));
+
+        Initialize {
+            config: PathBuf::new(),
+        }
+        .execute(&mock_fs);
+    }
+    #[test]
+    fn test_it_uses_existing_directory() {
+        let mut mock_fs = MockFileSystem::new();
+        mock_fs.expect_dir_exists().once().return_const(true);
+        mock_fs
+            .expect_create_dir().never();
+
+        Initialize {
+            config: PathBuf::new(),
+        }
+        .execute(&mock_fs);
     }
 }
