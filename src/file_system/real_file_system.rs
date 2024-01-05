@@ -1,9 +1,11 @@
 use crate::file_system::FileSystemError;
 
 use std::fs::create_dir_all;
+use std::fs::File;
 
 use std::fs::metadata;
 
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -28,6 +30,12 @@ impl FileSystem for RealFileSystem {
     }
 
     fn create_file(&self, path: &Path, contents: &str) -> Result<PathBuf, FileSystemError> {
-        todo!()
+        match File::create(path) {
+            Ok(mut f) => match f.write_all(contents.as_bytes()) {
+                Ok(_) => Ok(PathBuf::from(path)),
+                Err(_) => Err(FileSystemError::UnableToWriteToFile),
+            },
+            Err(_) => Err(FileSystemError::UnableToCreateFile),
+        }
     }
 }

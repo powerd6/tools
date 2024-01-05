@@ -15,6 +15,7 @@ pub(crate) trait FileSystem {
 pub(crate) enum FileSystemError {
     UnableToCreateDirectory,
     UnableToCreateFile,
+    UnableToWriteToFile,
 }
 
 pub(crate) mod real_file_system;
