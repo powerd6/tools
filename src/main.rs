@@ -43,8 +43,14 @@ enum Commands {
     /// Assembles a powerd6 module from a directory
     Assemble {
         /// The path of the directory to be assembled
-        #[arg(short, long, value_name = "./")]
-        config: Option<PathBuf>,
+        #[arg(short, long, default_value = "./")]
+        config: PathBuf,
+    },
+    /// Initializes a directory for a powerd6 module
+    Initialize {
+        /// The path of the directory to be initialized
+        #[arg(short, long, default_value = "./")]
+        config: PathBuf,
     },
 }
 
@@ -65,11 +71,19 @@ fn main() {
     match &cli.command {
         Commands::Assemble { config } => {
             trace!("Executing assemble");
-            debug!("Open config directory");
+            debug!("Open config directory: {:?}", config);
             debug!("Assemble module information");
-            debug!("Assemble authorship information");
+            debug!("Assemble authors information");
             debug!("Assemble schema information");
-            debug!("Assemble content information");
+            debug!("Assemble contents information");
+        },
+        Commands::Initialize { config } => {
+            trace!("Executing initialize");
+            debug!("Create config directory if not exists: {:?}", config);
+            debug!("Create module.yaml");
+            debug!("Create authors directory");
+            debug!("Create schema directory");
+            debug!("Create contents directory");
         },
     }
 }
