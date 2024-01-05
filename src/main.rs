@@ -33,9 +33,9 @@ enum LogLevel {
     Trace,
 }
 
-impl Into<LevelFilter> for LogLevel {
-    fn into(self) -> LevelFilter {
-        match self {
+impl From<LogLevel> for LevelFilter {
+    fn from(value: LogLevel) -> Self {
+        match value {
             LogLevel::Info => LevelFilter::Info,
             LogLevel::Warn => LevelFilter::Warn,
             LogLevel::Debug => LevelFilter::Debug,
