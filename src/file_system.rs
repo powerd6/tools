@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+#[automock]
+
 pub(crate) trait FileSystem {
     fn dir_exists(&self, path: &PathBuf) -> bool;
     fn create_dir(&self, path: &PathBuf) -> Result<PathBuf, FileSystemError>;
