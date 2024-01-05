@@ -18,7 +18,7 @@ pub(crate) struct Initialize {
 impl<F: FileSystem> Command<F> for Initialize {
     fn execute(&self, fs: &F) {
         trace!("Executing initialize");
-        // Create directory if it doesn't already exist
+        trace!("Initializing root directory");
         let root = if fs.dir_exists(&self.config) {
             self.config.clone()
         } else {
