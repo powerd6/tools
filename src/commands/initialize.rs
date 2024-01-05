@@ -3,7 +3,9 @@ use std::path::PathBuf;
 use clap::Args;
 use log::{debug, trace};
 
-use super::CommandExecutor;
+use crate::file_system::FileSystem;
+
+use super::Command;
 
 #[derive(Args)]
 /// Initializes a directory for a powerd6 module
@@ -13,13 +15,16 @@ pub(crate) struct Initialize {
     pub(crate) config: PathBuf,
 }
 
-impl CommandExecutor for Initialize {
-    fn execute(&self) {
+impl<F: FileSystem> Command<F> for Initialize {
+    fn execute(&self, _: &F) {
         trace!("Executing initialize");
-        debug!(
-            "Create config directory if not exists: {:?}",
-            self.config
-        );
+        // Create directory if it doesn't already exist
+        let root = if F::dir_exists(&self.config) {
+            &self.config
+        } else {
+            debug!("Creating root directory {:?}", &self.config);
+            F::create_dir(&self.config).unwrap()
+        };
         debug!("Create module.yaml");
         debug!("Create authors directory");
         debug!("Create schema directory");

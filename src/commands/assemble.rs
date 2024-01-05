@@ -3,7 +3,9 @@ use std::path::PathBuf;
 use clap::Args;
 use log::{debug, trace};
 
-use super::CommandExecutor;
+use crate::file_system::FileSystem;
+
+use super::Command;
 
 #[derive(Args)]
 /// Assembles a powerd6 module from a directory
@@ -13,8 +15,8 @@ pub(crate) struct Assemble {
     pub(crate) config: PathBuf,
 }
 
-impl CommandExecutor for Assemble {
-    fn execute(&self) {
+impl<F: FileSystem> Command<F> for Assemble {
+    fn execute(&self, _: &F) {
         trace!("Executing assemble");
         debug!("Open config directory: {:?}", self.config);
         debug!("Assemble module information");

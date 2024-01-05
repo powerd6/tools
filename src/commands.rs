@@ -1,7 +1,11 @@
+use std::error::Error;
+
 use clap::Subcommand;
 
-trait CommandExecutor {
-    fn execute(&self);
+use crate::file_system::{FileSystem, self};
+
+trait Command<F: FileSystem> {
+    fn execute(&self, _: &F);
 }
 
 mod assemble;
@@ -13,9 +17,9 @@ pub(crate) enum Commands {
     Initialize(initialize::Initialize),
 }
 
-pub(crate) fn execute_command(command: Commands) {
+pub(super) fn execute_command<F: FileSystem>(command: Commands, file_system: F) {
     match command {
-        Commands::Assemble(a) => a.execute(),
-        Commands::Initialize(a) => a.execute(),
+        Commands::Assemble(a) => a.execute(&file_system),
+        Commands::Initialize(a) => a.execute(&file_system),
     }
 }

@@ -1,10 +1,13 @@
 use clap::{Parser, ValueEnum};
-use log::{LevelFilter, trace};
+use log::{trace, LevelFilter};
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode};
 
-use crate::commands::Commands;
+use crate::{
+    commands::{Commands, execute_command}, file_system::real_file_system::RealFileSystem,
+};
 
 mod commands;
+mod file_system;
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -40,7 +43,6 @@ impl Into<LevelFilter> for LogLevel {
     }
 }
 
-
 fn main() {
     // Parse input
     let cli = Cli::parse();
@@ -55,8 +57,12 @@ fn main() {
     .unwrap();
     trace!("Loggers initialized!");
 
+    // Initialize FileSystem
+    let file_system = RealFileSystem;
+    trace!("File system initialized!");
+
     trace!("Executing command");
-    commands::execute_command(cli.command);
+    execute_command(cli.command, file_system);
 
     trace!("Finished execution");
 }
