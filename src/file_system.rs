@@ -1,11 +1,11 @@
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 use mockall::automock;
 
 #[automock]
 pub(crate) trait FileSystem {
-    fn dir_exists(&self, path: &PathBuf) -> bool;
-    fn create_dir(&self, path: &PathBuf) -> Result<PathBuf, FileSystemError>;
+    fn dir_exists(&self, path: &Path) -> bool;
+    fn create_dir(&self, path: &Path) -> Result<PathBuf, FileSystemError>;
 }
 
 #[derive(Debug)]
