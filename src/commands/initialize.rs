@@ -47,7 +47,7 @@ impl Initialize {
     }
 
     fn initialize_module_file(&self, root: PathBuf, fs: &impl FileSystem) {
-        let file_info = match self.file_type {
+        let (file_name, contents) = match self.file_type {
             FileType::Json => (
                 "module.json",
                 include_str!("../../fixtures/commands/initialize/module.json"),
@@ -58,10 +58,10 @@ impl Initialize {
             ),
         };
 
-        let module_file = &root.join(file_info.0);
+        let module_file = &root.join(file_name);
         if !fs.file_exists(module_file) {
             debug!("Creating module.yaml");
-            fs.create_file(module_file, file_info.1)
+            fs.create_file(module_file, contents)
                 .expect("Module file could not be created");
         }
     }
