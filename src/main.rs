@@ -1,8 +1,10 @@
-use std::path::PathBuf;
-
-use clap::{Parser, Subcommand, ValueEnum};
-use log::{LevelFilter, trace, error, debug};
+use clap::{Parser, ValueEnum};
+use log::{LevelFilter, trace};
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode};
+
+use crate::commands::Commands;
+
+mod commands;
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -11,7 +13,7 @@ struct Cli {
     #[arg(short, long, global=true, value_enum, default_value_t=LogLevel::Info)]
     log_level: LogLevel,
 
-    #[command(subcommand, )]
+    #[command(subcommand)]
     command: Commands,
 }
 
@@ -38,21 +40,6 @@ impl Into<LevelFilter> for LogLevel {
     }
 }
 
-#[derive(Subcommand)]
-enum Commands {
-    /// Assembles a powerd6 module from a directory
-    Assemble {
-        /// The path of the directory to be assembled
-        #[arg(short, long, default_value = "./")]
-        config: PathBuf,
-    },
-    /// Initializes a directory for a powerd6 module
-    Initialize {
-        /// The path of the directory to be initialized
-        #[arg(short, long, default_value = "./")]
-        config: PathBuf,
-    },
-}
 
 fn main() {
     // Parse input
@@ -68,22 +55,6 @@ fn main() {
     .unwrap();
     trace!("Loggers initialized!");
 
-    match &cli.command {
-        Commands::Assemble { config } => {
-            trace!("Executing assemble");
-            debug!("Open config directory: {:?}", config);
-            debug!("Assemble module information");
-            debug!("Assemble authors information");
-            debug!("Assemble schema information");
-            debug!("Assemble contents information");
-        },
-        Commands::Initialize { config } => {
-            trace!("Executing initialize");
-            debug!("Create config directory if not exists: {:?}", config);
-            debug!("Create module.yaml");
-            debug!("Create authors directory");
-            debug!("Create schema directory");
-            debug!("Create contents directory");
-        },
-    }
+    trace!("Executing command");
+    commands::execute_command(cli.command)
 }
