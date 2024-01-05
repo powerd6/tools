@@ -56,5 +56,7 @@ fn main() {
     trace!("Loggers initialized!");
 
     trace!("Executing command");
-    commands::execute_command(cli.command)
+    commands::execute_command(cli.command);
+
+    trace!("Finished execution");
 }
