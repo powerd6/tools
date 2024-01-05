@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
 pub(crate) trait FileSystem {
-    fn dir_exists(path: &PathBuf) -> bool;
-    fn create_dir(path: &PathBuf) -> Result<&PathBuf, FileSystemError>;
+    fn dir_exists(&self, path: &PathBuf) -> bool;
+    fn create_dir(&self, path: &PathBuf) -> Result<PathBuf, FileSystemError>;
 }
 
 #[derive(Debug)]

@@ -16,14 +16,14 @@ pub(crate) struct Initialize {
 }
 
 impl<F: FileSystem> Command<F> for Initialize {
-    fn execute(&self, _: &F) {
+    fn execute(&self,fs: &F) {
         trace!("Executing initialize");
         // Create directory if it doesn't already exist
-        let root = if F::dir_exists(&self.config) {
-            &self.config
+        let root = if fs.dir_exists(&self.config) {
+            self.config.clone()
         } else {
             debug!("Creating root directory {:?}", &self.config);
-            F::create_dir(&self.config).unwrap()
+            fs.create_dir(&self.config).unwrap()
         };
         debug!("Create module.yaml");
         debug!("Create authors directory");
