@@ -27,7 +27,6 @@ impl<F: FileSystem> Command<F> for Initialize {
     fn execute(&self, fs: &F) {
         trace!("Executing initialize");
         let root = self.initialize_root(fs);
-        trace!("Initializing module.yaml");
         self.initialize_module_file(root, fs);
         debug!("Create authors directory");
         debug!("Create schema directory");
@@ -47,6 +46,7 @@ impl Initialize {
     }
 
     fn initialize_module_file(&self, root: PathBuf, fs: &impl FileSystem) {
+        trace!("Initializing module.yaml");
         let (file_name, contents) = match self.file_type {
             FileType::Json => (
                 "module.json",
