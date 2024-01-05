@@ -6,6 +6,8 @@ use mockall::automock;
 pub(crate) trait FileSystem {
     fn dir_exists(&self, path: &Path) -> bool;
     fn create_dir(&self, path: &Path) -> Result<PathBuf, FileSystemError>;
+
+    fn file_exists(&self, path: &Path) -> bool;
 }
 
 #[derive(Debug)]

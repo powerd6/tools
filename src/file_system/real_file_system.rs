@@ -22,4 +22,8 @@ impl FileSystem for RealFileSystem {
             Err(_) => Err(FileSystemError::UnableToCreateDirectory),
         }
     }
+
+    fn file_exists(&self,path: &Path) -> bool {
+        metadata(path).map_or(false, |metadata: std::fs::Metadata| metadata.is_file())
+    }
 }

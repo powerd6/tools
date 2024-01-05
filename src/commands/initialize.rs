@@ -25,7 +25,11 @@ impl<F: FileSystem> Command<F> for Initialize {
             debug!("Creating root directory {:?}", &self.config);
             fs.create_dir(&self.config).unwrap()
         };
-        debug!("Create module.yaml");
+        trace!("Initializing module.yaml");
+        if !fs.file_exists(&root.join("module.yaml")) {
+            debug!("Creating module.yaml");
+            todo!("Create file")
+        }
         debug!("Create authors directory");
         debug!("Create schema directory");
         debug!("Create contents directory");
