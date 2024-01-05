@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::Args;
+use clap::{Args, ValueEnum};
 use log::{debug, trace};
 
 use crate::file_system::FileSystem;
@@ -13,6 +13,14 @@ pub(crate) struct Initialize {
     /// The path of the directory to be initialized
     #[arg(short, long, default_value = "./")]
     config: PathBuf,
+    /// The format of the default and sample files to be created
+    #[arg(short, long, value_enum, default_value_t=FileType::Json)]
+    file_type: FileType,
+}
+#[derive(Clone, ValueEnum)]
+enum FileType {
+    Json,
+    Yaml,
 }
 
 impl<F: FileSystem> Command<F> for Initialize {
@@ -39,10 +47,33 @@ impl Initialize {
     }
 
     fn initialize_module_file(&self, root: PathBuf, fs: &impl FileSystem) {
-        let module_file = &root.join("module.yaml");
+        let file_info = match self.file_type {
+            FileType::Json => (
+                "module.json",
+                r#"{
+    "title": "My new module",
+    "description": "This is my module.",
+    "references": {
+        "my-module-id": [
+            "some-website"
+        ]
+    }
+}"#,
+            ),
+            FileType::Yaml => (
+                "module.yaml",
+                r#"title: My new module
+description: This is my module.
+references:
+    my-module-id:
+        - some-website"#,
+            ),
+        };
+
+        let module_file = &root.join(file_info.0);
         if !fs.file_exists(module_file) {
             debug!("Creating module.yaml");
-            fs.create_file(module_file, "")
+            fs.create_file(module_file, file_info.1)
                 .expect("Module file could not be created");
         }
     }
@@ -54,7 +85,7 @@ mod tests {
 
     use crate::file_system::MockFileSystem;
 
-    use super::Initialize;
+    use super::{FileType, Initialize};
 
     #[test]
     fn it_creates_root_directory_when_needed() {
@@ -67,6 +98,7 @@ mod tests {
 
         Initialize {
             config: PathBuf::new(),
+            file_type: FileType::Json,
         }
         .initialize_root(&mock_fs);
     }
@@ -78,6 +110,7 @@ mod tests {
 
         Initialize {
             config: PathBuf::new(),
+            file_type: FileType::Json,
         }
         .initialize_root(&mock_fs);
     }
@@ -93,6 +126,7 @@ mod tests {
 
         Initialize {
             config: PathBuf::new(),
+            file_type: FileType::Json,
         }
         .initialize_module_file(PathBuf::new(), &mock_fs);
     }
@@ -105,6 +139,7 @@ mod tests {
 
         Initialize {
             config: PathBuf::new(),
+            file_type: FileType::Json,
         }
         .initialize_module_file(PathBuf::new(), &mock_fs);
     }
