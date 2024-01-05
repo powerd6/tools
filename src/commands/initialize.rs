@@ -27,12 +27,14 @@ impl<F: FileSystem> Command<F> for Initialize {
     fn execute(&self, fs: &F) {
         trace!("Executing initialize");
         let root = self.initialize_root(fs);
-        self.initialize_module_file(root, fs);
+        self.initialize_module_file(&root, fs);
+        self.initialize_authors(&root, fs);
         debug!("Create authors directory");
         debug!("Create schema directory");
         debug!("Create contents directory");
     }
 }
+
 impl Initialize {
     fn initialize_root(&self, fs: &impl FileSystem) -> PathBuf {
         trace!("Initializing root directory");
@@ -45,7 +47,7 @@ impl Initialize {
         root
     }
 
-    fn initialize_module_file(&self, root: PathBuf, fs: &impl FileSystem) {
+    fn initialize_module_file(&self, root: &PathBuf, fs: &impl FileSystem) {
         trace!("Initializing module.yaml");
         let (file_name, contents) = match self.file_type {
             FileType::Json => (
@@ -60,9 +62,43 @@ impl Initialize {
 
         let module_file = &root.join(file_name);
         if !fs.file_exists(module_file) {
-            debug!("Creating module.yaml");
+            debug!("Creating {:?}", module_file);
             fs.create_file(module_file, contents)
+                // TODO: Refactor to remove the need for these `expect` statements
                 .expect("Module file could not be created");
+        }
+    }
+
+    fn initialize_authors(&self, root: &PathBuf, fs: &impl FileSystem) {
+        trace!("Initializing authors directory");
+        let dir = if fs.dir_exists(&root.join("authors")) {
+            root.join("authors")
+        } else {
+            debug!("Creating authors directory");
+            fs.create_dir(&root.join("authors")).unwrap()
+        };
+        let author_files = fs.get_dir_files(dir.as_ref());
+
+        let pd6_array_file = &dir.join("_array.pd6");
+        if !fs.file_exists(pd6_array_file) {
+            debug!("Creating {:?}", pd6_array_file);
+            fs.create_file(pd6_array_file, "This file is a flag that transforms each item in it into an element of an array element")
+                .expect("Array file could not be created");
+        }
+
+        if author_files.is_none() {
+            let (file_name, contents) = match self.file_type {
+                FileType::Json => (
+                    "author.json",
+                    include_str!("../../fixtures/commands/initialize/author.json"),
+                ),
+                FileType::Yaml => (
+                    "author.yaml",
+                    include_str!("../../fixtures/commands/initialize/author.yaml"),
+                ),
+            };
+            fs.create_file(&dir.join(file_name), contents)
+                .expect("Sample author file could not be created");
         }
     }
 }
