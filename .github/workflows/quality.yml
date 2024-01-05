@@ -44,3 +44,11 @@ jobs:
         components: clippy
     - name: Check clippy
       run: cargo clippy --tests --all-features -- --deny warnings
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: moonrepo/setup-rust@v1
+    - name: Run tests
+      run: cargo test
