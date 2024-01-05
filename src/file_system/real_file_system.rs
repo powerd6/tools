@@ -23,7 +23,11 @@ impl FileSystem for RealFileSystem {
         }
     }
 
-    fn file_exists(&self,path: &Path) -> bool {
+    fn file_exists(&self, path: &Path) -> bool {
         metadata(path).map_or(false, |metadata: std::fs::Metadata| metadata.is_file())
+    }
+
+    fn create_file(&self, path: &Path, contents: &str) -> Result<PathBuf, FileSystemError> {
+        todo!()
     }
 }
