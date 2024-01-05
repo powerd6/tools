@@ -50,23 +50,11 @@ impl Initialize {
         let file_info = match self.file_type {
             FileType::Json => (
                 "module.json",
-                r#"{
-    "title": "My new module",
-    "description": "This is my module.",
-    "references": {
-        "my-module-id": [
-            "some-website"
-        ]
-    }
-}"#,
+                include_str!("../../fixtures/commands/initialize/module.json"),
             ),
             FileType::Yaml => (
                 "module.yaml",
-                r#"title: My new module
-description: This is my module.
-references:
-    my-module-id:
-        - some-website"#,
+                include_str!("../../fixtures/commands/initialize/module.yaml"),
             ),
         };
 
