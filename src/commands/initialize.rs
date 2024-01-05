@@ -38,7 +38,7 @@ impl<F: FileSystem> Command<F> for Initialize {
 impl Initialize {
     fn initialize_root(&self, fs: &impl FileSystem) -> PathBuf {
         trace!("Initializing root directory");
-        fs.create_dir_if_not_exist(&self.config).unwrap()
+        fs.create_dir_if_not_exists(&self.config).unwrap()
     }
 
     fn initialize_module_file(&self, root: &PathBuf, fs: &impl FileSystem) {
@@ -65,7 +65,7 @@ impl Initialize {
 
     fn initialize_authors(&self, root: &PathBuf, fs: &impl FileSystem) {
         trace!("Initializing authors directory");
-        let dir = fs.create_dir_if_not_exist(&root.join("authors")).unwrap();
+        let dir = fs.create_dir_if_not_exists(&root.join("authors")).unwrap();
 
         let author_files = fs.get_dir_files(dir.as_ref());
         debug!(
