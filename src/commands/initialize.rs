@@ -58,8 +58,7 @@ mod tests {
     fn test_it_uses_existing_directory() {
         let mut mock_fs = MockFileSystem::new();
         mock_fs.expect_dir_exists().once().return_const(true);
-        mock_fs
-            .expect_create_dir().never();
+        mock_fs.expect_create_dir().never();
 
         Initialize {
             config: PathBuf::new(),

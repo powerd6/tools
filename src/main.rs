@@ -3,7 +3,8 @@ use log::{trace, LevelFilter};
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode};
 
 use crate::{
-    commands::{Commands, execute_command}, file_system::real_file_system::RealFileSystem,
+    commands::{execute_command, Commands},
+    file_system::real_file_system::RealFileSystem,
 };
 
 mod commands;
