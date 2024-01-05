@@ -12,19 +12,13 @@ use super::Command;
 pub(crate) struct Initialize {
     /// The path of the directory to be initialized
     #[arg(short, long, default_value = "./")]
-    pub(crate) config: PathBuf,
+    config: PathBuf,
 }
 
 impl<F: FileSystem> Command<F> for Initialize {
     fn execute(&self, fs: &F) {
         trace!("Executing initialize");
-        trace!("Initializing root directory");
-        let root = if fs.dir_exists(&self.config) {
-            self.config.clone()
-        } else {
-            debug!("Creating root directory {:?}", &self.config);
-            fs.create_dir(&self.config).unwrap()
-        };
+        let root = self.initialize_root(fs);
         trace!("Initializing module.yaml");
         if !fs.file_exists(&root.join("module.yaml")) {
             debug!("Creating module.yaml");
@@ -36,11 +30,24 @@ impl<F: FileSystem> Command<F> for Initialize {
     }
 }
 
+impl Initialize {
+    fn initialize_root(&self, fs: &impl FileSystem) -> PathBuf {
+        trace!("Initializing root directory");
+        let root = if fs.dir_exists(&self.config) {
+            self.config.clone()
+        } else {
+            debug!("Creating root directory {:?}", &self.config);
+            fs.create_dir(&self.config).unwrap()
+        };
+        root
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
 
-    use crate::{commands::Command, file_system::MockFileSystem};
+    use crate::file_system::MockFileSystem;
 
     use super::Initialize;
 
@@ -56,7 +63,7 @@ mod tests {
         Initialize {
             config: PathBuf::new(),
         }
-        .execute(&mock_fs);
+        .initialize_root(&mock_fs);
     }
     #[test]
     fn test_it_uses_existing_directory() {
@@ -67,6 +74,6 @@ mod tests {
         Initialize {
             config: PathBuf::new(),
         }
-        .execute(&mock_fs);
+        .initialize_root(&mock_fs);
     }
 }
