@@ -52,7 +52,7 @@ mod tests {
     use super::Initialize;
 
     #[test]
-    fn test_it_creates_directory_when_needed() {
+    fn it_creates_root_directory_when_needed() {
         let mut mock_fs = MockFileSystem::new();
         mock_fs.expect_dir_exists().once().return_const(false);
         mock_fs
@@ -66,7 +66,7 @@ mod tests {
         .initialize_root(&mock_fs);
     }
     #[test]
-    fn test_it_uses_existing_directory() {
+    fn it_uses_existing_root_directory() {
         let mut mock_fs = MockFileSystem::new();
         mock_fs.expect_dir_exists().once().return_const(true);
         mock_fs.expect_create_dir().never();
