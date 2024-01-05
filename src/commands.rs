@@ -1,5 +1,9 @@
 use clap::Subcommand;
 
+trait CommandExecutor {
+    fn execute(&self);
+}
+
 mod assemble;
 mod initialize;
 
@@ -7,10 +11,6 @@ mod initialize;
 pub(crate) enum Commands {
     Assemble(assemble::Assemble),
     Initialize(initialize::Initialize),
-}
-
-trait CommandExecutor {
-    fn execute(&self);
 }
 
 pub(crate) fn execute_command(command: Commands) {
