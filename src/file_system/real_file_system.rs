@@ -5,6 +5,7 @@ use std::fs::File;
 
 use std::fs::metadata;
 
+use std::fs::read_dir;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
@@ -36,6 +37,23 @@ impl FileSystem for RealFileSystem {
                 Err(_) => Err(FileSystemError::UnableToWriteToFile),
             },
             Err(_) => Err(FileSystemError::UnableToCreateFile),
+        }
+    }
+
+    fn get_dir_files(&self, path: &Path) -> Option<Vec<PathBuf>> {
+        match read_dir(path) {
+            Ok(entries) => {
+                let files: Vec<PathBuf> = entries
+                    .filter_map(|entry| entry.ok().map(|e| e.path()))
+                    .collect();
+
+                if files.is_empty() {
+                    None
+                } else {
+                    Some(files)
+                }
+            }
+            Err(_) => None,
         }
     }
 }

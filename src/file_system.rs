@@ -9,6 +9,8 @@ pub(crate) trait FileSystem {
 
     fn file_exists(&self, path: &Path) -> bool;
     fn create_file(&self, path: &Path, contents: &str) -> Result<PathBuf, FileSystemError>;
+
+    fn get_dir_files(&self, path: &Path) -> Option<Vec<PathBuf>>;
 }
 
 #[derive(Debug)]
