@@ -1,8 +1,6 @@
-use std::error::Error;
-
 use clap::Subcommand;
 
-use crate::file_system::{FileSystem, self};
+use crate::file_system::FileSystem;
 
 trait Command<F: FileSystem> {
     fn execute(&self, _: &F);

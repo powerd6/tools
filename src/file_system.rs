@@ -1,4 +1,4 @@
-use std::{fs::{}, path::PathBuf};
+use std::path::PathBuf;
 
 pub(crate) trait FileSystem {
     fn dir_exists(path: &PathBuf) -> bool;
