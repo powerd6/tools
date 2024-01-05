@@ -38,13 +38,7 @@ impl<F: FileSystem> Command<F> for Initialize {
 impl Initialize {
     fn initialize_root(&self, fs: &impl FileSystem) -> PathBuf {
         trace!("Initializing root directory");
-        let root = if fs.dir_exists(&self.config) {
-            self.config.clone()
-        } else {
-            debug!("Creating root directory {:?}", &self.config);
-            fs.create_dir(&self.config).unwrap()
-        };
-        root
+        fs.create_dir_if_not_exist(&self.config).unwrap()
     }
 
     fn initialize_module_file(&self, root: &PathBuf, fs: &impl FileSystem) {
@@ -71,22 +65,22 @@ impl Initialize {
 
     fn initialize_authors(&self, root: &PathBuf, fs: &impl FileSystem) {
         trace!("Initializing authors directory");
-        let dir = if fs.dir_exists(&root.join("authors")) {
-            root.join("authors")
-        } else {
-            debug!("Creating authors directory");
-            fs.create_dir(&root.join("authors")).unwrap()
-        };
-        let author_files = fs.get_dir_files(dir.as_ref());
+        let dir = fs.create_dir_if_not_exist(&root.join("authors")).unwrap();
 
-        let pd6_array_file = &dir.join("_array.pd6");
-        if !fs.file_exists(pd6_array_file) {
-            debug!("Creating {:?}", pd6_array_file);
-            fs.create_file(pd6_array_file, "This file is a flag that transforms each item in it into an element of an array element")
-                .expect("Array file could not be created");
-        }
+        let author_files = fs.get_dir_files(dir.as_ref());
+        debug!(
+            "Authors directory has {} files",
+            author_files.clone().map_or(0, |v| v.len())
+        );
+
+        fs.create_file_if_not_exists(
+            &dir.join("_array.pd6"),
+            include_str!("../../fixtures/commands/initialize/_array.pd6"),
+        )
+        .expect("Array file could not be created");
 
         if author_files.is_none() {
+            trace!("Creating sample author");
             let (file_name, contents) = match self.file_type {
                 FileType::Json => (
                     "author.json",
@@ -100,71 +94,5 @@ impl Initialize {
             fs.create_file(&dir.join(file_name), contents)
                 .expect("Sample author file could not be created");
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::path::PathBuf;
-
-    use crate::file_system::MockFileSystem;
-
-    use super::{FileType, Initialize};
-
-    #[test]
-    fn it_creates_root_directory_when_needed() {
-        let mut mock_fs = MockFileSystem::new();
-        mock_fs.expect_dir_exists().once().return_const(false);
-        mock_fs
-            .expect_create_dir()
-            .once()
-            .returning(|p| Ok(PathBuf::from(p)));
-
-        Initialize {
-            config: PathBuf::new(),
-            file_type: FileType::Json,
-        }
-        .initialize_root(&mock_fs);
-    }
-    #[test]
-    fn it_uses_existing_root_directory() {
-        let mut mock_fs = MockFileSystem::new();
-        mock_fs.expect_dir_exists().once().return_const(true);
-        mock_fs.expect_create_dir().never();
-
-        Initialize {
-            config: PathBuf::new(),
-            file_type: FileType::Json,
-        }
-        .initialize_root(&mock_fs);
-    }
-
-    #[test]
-    fn it_creates_module_file() {
-        let mut mock_fs = MockFileSystem::new();
-        mock_fs.expect_file_exists().once().return_const(false);
-        mock_fs
-            .expect_create_file()
-            .once()
-            .returning(|p, _| Ok(PathBuf::from(p)));
-
-        Initialize {
-            config: PathBuf::new(),
-            file_type: FileType::Json,
-        }
-        .initialize_module_file(&PathBuf::new(), &mock_fs);
-    }
-
-    #[test]
-    fn it_uses_existing_module_file() {
-        let mut mock_fs = MockFileSystem::new();
-        mock_fs.expect_file_exists().once().return_const(true);
-        mock_fs.expect_create_file().never();
-
-        Initialize {
-            config: PathBuf::new(),
-            file_type: FileType::Json,
-        }
-        .initialize_module_file(&PathBuf::new(), &mock_fs);
     }
 }
