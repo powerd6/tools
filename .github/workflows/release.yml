@@ -65,7 +65,14 @@ jobs:
           {
             echo "CURRENT=${{steps.current.outputs.version}}"
             echo "NEXT=${{steps.next.outputs.version}}"
+            echo "CURRENT_CARGO=$(echo '${{ steps.current.outputs.version }}' | sed 's/v//')"
+            echo "NEXT_CARGO=$(echo '${{steps.next.outputs.version}}' | sed 's/v//')"
           } >> "$GITHUB_ENV"
+      - name: update Cargo.toml
+        run: |-
+          sed -i "s/$CURRENT_CARGO/$NEXT_CARGO/g" Cargo.toml
+          git add Cargo.toml
+          git commit -m "update Cargo.toml"
       - name: update CHANGELOG.md
         run: |-
           head -n 13 CHANGELOG.md > changelog.md.0
