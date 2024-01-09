@@ -3,7 +3,8 @@
     "automock",
     "mockall",
     "powerd6",
-    "simplelog"
+    "simplelog",
+    "testdir"
   ],
   "git.enableCommitSigning": true
 }

@@ -40,7 +40,7 @@ impl FileSystem for RealFileSystem {
         }
     }
 
-    fn get_dir_files(&self, path: &Path) -> Option<Vec<PathBuf>> {
+    fn get_dir_children(&self, path: &Path) -> Option<Vec<PathBuf>> {
         match read_dir(path) {
             Ok(entries) => {
                 let files: Vec<PathBuf> = entries
@@ -55,5 +55,38 @@ impl FileSystem for RealFileSystem {
             }
             Err(_) => None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use crate::file_system::FileSystem;
+
+    use super::RealFileSystem;
+
+    use testdir::testdir;
+
+    #[test]
+    fn it_returns_files_and_children() {
+        let fs = RealFileSystem;
+
+        let dir: PathBuf = testdir!();
+
+        let file = fs.create_file(&dir.join("test.txt"), "").unwrap();
+        let subdirectory = fs.create_dir(&dir.join("test")).unwrap();
+
+        let mut actual = fs.get_dir_children(&dir).unwrap();
+        let mut expected = vec![file,
+        subdirectory];
+
+        actual.sort();
+        expected.sort();
+
+        assert_eq!(
+            actual,
+            expected,
+        )
     }
 }

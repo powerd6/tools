@@ -29,7 +29,7 @@ pub(crate) trait FileSystem {
         }
     }
 
-    fn get_dir_files(&self, path: &Path) -> Option<Vec<PathBuf>>;
+    fn get_dir_children(&self, path: &Path) -> Option<Vec<PathBuf>>;
 }
 
 #[derive(Debug)]
@@ -56,7 +56,7 @@ mock! {
         fn create_dir(&self, path: &Path) -> Result<PathBuf, FileSystemError>;
         fn file_exists(&self, path: &Path) -> bool;
         fn create_file(&self, path: &Path, contents: &str) -> Result<PathBuf, FileSystemError>;
-        fn get_dir_files(&self, path: &Path) -> Option<Vec<PathBuf>>;
+        fn get_dir_children(&self, path: &Path) -> Option<Vec<PathBuf>>;
     }
 }
 
