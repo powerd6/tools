@@ -14,12 +14,14 @@ pub(crate) struct Initialize {
     #[arg(short, long, default_value = "./")]
     config: PathBuf,
     /// The format of the default and sample files to be created
-    #[arg(short, long, value_enum, default_value_t=FileType::Json)]
+    #[arg(short, long, value_enum, default_value_t=FileType::Yaml)]
     file_type: FileType,
 }
 #[derive(Clone, ValueEnum)]
 enum FileType {
+    /// The more compact format, closer to what will be distributed
     Json,
+    /// A more friendly and expressive format, easier to edit
     Yaml,
 }
 
