@@ -22,7 +22,7 @@ impl FileSystem for RealFileSystem {
     fn create_dir(&self, path: &Path) -> Result<PathBuf, FileSystemError> {
         match create_dir_all(path) {
             Ok(_) => Ok(PathBuf::from(path)),
-            Err(_) => Err(FileSystemError::UnableToCreateDirectory),
+            Err(_) => Err(FileSystemError::CreateDirectory),
         }
     }
 
@@ -34,9 +34,9 @@ impl FileSystem for RealFileSystem {
         match File::create(path) {
             Ok(mut f) => match f.write_all(contents.as_bytes()) {
                 Ok(_) => Ok(PathBuf::from(path)),
-                Err(_) => Err(FileSystemError::UnableToWriteToFile),
+                Err(_) => Err(FileSystemError::WriteToFile),
             },
-            Err(_) => Err(FileSystemError::UnableToCreateFile),
+            Err(_) => Err(FileSystemError::CreateFile),
         }
     }
 

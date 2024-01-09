@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::{Args, ValueEnum};
 use log::{debug, trace};
@@ -43,7 +43,7 @@ impl Initialize {
         fs.create_dir_if_not_exists(&self.config).unwrap()
     }
 
-    fn initialize_module_file(&self, root: &PathBuf, fs: &impl FileSystem) {
+    fn initialize_module_file(&self, root: &Path, fs: &impl FileSystem) {
         trace!("Initializing module.yaml");
         let (file_name, contents) = match self.file_type {
             FileType::Json => (
@@ -65,7 +65,7 @@ impl Initialize {
         }
     }
 
-    fn initialize_authors(&self, root: &PathBuf, fs: &impl FileSystem) {
+    fn initialize_authors(&self, root: &Path, fs: &impl FileSystem) {
         trace!("Initializing authors directory");
         let dir = fs.create_dir_if_not_exists(&root.join("authors")).unwrap();
 
@@ -98,7 +98,7 @@ impl Initialize {
         }
     }
 
-    fn initialize_schema(&self, root: &PathBuf, fs: &impl FileSystem) {
+    fn initialize_schema(&self, root: &Path, fs: &impl FileSystem) {
         trace!("Initializing schema directory");
         let dir = fs.create_dir_if_not_exists(&root.join("schema")).unwrap();
 
@@ -125,7 +125,7 @@ impl Initialize {
         }
     }
 
-    fn initialize_content(&self, root: &PathBuf, fs: &impl FileSystem) {
+    fn initialize_content(&self, root: &Path, fs: &impl FileSystem) {
         trace!("Initializing content directory");
         let dir = fs.create_dir_if_not_exists(&root.join("content")).unwrap();
 
