@@ -17,5 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Create new cli
 - Add `initialize` command to bootstrap new projects
+- Automate release process
 
 <!-- markdown-link-check-enable -->
