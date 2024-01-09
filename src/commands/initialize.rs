@@ -29,7 +29,7 @@ impl<F: FileSystem> Command<F> for Initialize {
         let root = self.initialize_root(fs);
         self.initialize_module_file(&root, fs);
         self.initialize_authors(&root, fs);
-        debug!("Create schema directory");
+        self.initialize_schema(&root, fs);
         debug!("Create contents directory");
     }
 }
@@ -66,10 +66,10 @@ impl Initialize {
         trace!("Initializing authors directory");
         let dir = fs.create_dir_if_not_exists(&root.join("authors")).unwrap();
 
-        let author_files = fs.get_dir_files(dir.as_ref());
+        let dir_children = fs.get_dir_children(dir.as_ref());
         debug!(
-            "Authors directory has {} files",
-            author_files.clone().map_or(0, |v| v.len())
+            "Authors directory has {} files or subdirectories",
+            dir_children.clone().map_or(0, |v| v.len())
         );
 
         fs.create_file_if_not_exists(
@@ -78,7 +78,7 @@ impl Initialize {
         )
         .expect("Array file could not be created");
 
-        if author_files.is_none() {
+        if dir_children.is_none() {
             trace!("Creating sample author");
             let (file_name, contents) = match self.file_type {
                 FileType::Json => (
@@ -92,6 +92,33 @@ impl Initialize {
             };
             fs.create_file(&dir.join(file_name), contents)
                 .expect("Sample author file could not be created");
+        }
+    }
+
+    fn initialize_schema(&self, root: &PathBuf, fs: &impl FileSystem) {
+        trace!("Initializing schema directory");
+        let dir = fs.create_dir_if_not_exists(&root.join("schema")).unwrap();
+
+        let dir_children = fs.get_dir_children(dir.as_ref());
+        debug!(
+            "Schema directory has {} files",
+            dir_children.clone().map_or(0, |v| v.len())
+        );
+
+        if dir_children.is_none() {
+            trace!("Creating sample schema");
+            let (file_name, contents) = match self.file_type {
+                FileType::Json => (
+                    "schema.json",
+                    include_str!("../../fixtures/commands/initialize/schema.json"),
+                ),
+                FileType::Yaml => (
+                    "schema.yaml",
+                    include_str!("../../fixtures/commands/initialize/schema.yaml"),
+                ),
+            };
+            fs.create_file(&dir.join(file_name), contents)
+                .expect("Sample schema file could not be created");
         }
     }
 }
