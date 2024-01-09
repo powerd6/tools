@@ -78,15 +78,11 @@ mod tests {
         let subdirectory = fs.create_dir(&dir.join("test")).unwrap();
 
         let mut actual = fs.get_dir_children(&dir).unwrap();
-        let mut expected = vec![file,
-        subdirectory];
+        let mut expected = vec![file, subdirectory];
 
         actual.sort();
         expected.sort();
 
-        assert_eq!(
-            actual,
-            expected,
-        )
+        assert_eq!(actual, expected,)
     }
 }
