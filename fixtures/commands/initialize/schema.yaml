@@ -1,0 +1,24 @@
+validation:
+    $schema: 'https://json-schema.org/draft-07/schema'
+    title: Sample schema
+    description: A sample Powerd6 schema
+    type: object
+    properties:
+        name:
+            type: string
+        number:
+            type: integer
+    required:
+        - name
+        - number
+    unevaluatedProperties: false
+rendering: |-
+    {# This is a comment #}
+    {{ content.name }}
+
+    {% if content.number %}
+        Has number {{ content.number }}.
+    {% else %}
+        Has no number.
+    {% endif %}
+renderOrder: 1

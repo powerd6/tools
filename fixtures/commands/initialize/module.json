@@ -1,0 +1,9 @@
+{
+    "title": "My new module",
+    "description": "This is my module.",
+    "references": {
+        "my-module-id": [
+            "some-website"
+        ]
+    }
+}

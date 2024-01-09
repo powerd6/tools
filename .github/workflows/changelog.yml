@@ -1,0 +1,43 @@
+name: Changelog
+
+concurrency:
+    cancel-in-progress: true
+    group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+
+on:
+  pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+  check_changes:
+    name: Ensure changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check if file is modified
+        id: check_file
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if gh pr diff --name-only "$HEAD_REF" | grep -q 'CHANGELOG.md'; then
+            echo "File has been modified"
+            echo "file_modified=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "File not modified"
+            echo "file_modified=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Fail (if not modified)
+        if: steps.check_file.outputs.file_modified == 'false'
+        run: |
+          echo "The CHANGELOG must be updated with every pull request."
+          exit 1
+      - name: Pass (file modified))
+        if: steps.check_file.outputs.file_modified == 'true'
+        run: |
+          echo "The CHANGELOG was updated. All good."
+          exit 0
