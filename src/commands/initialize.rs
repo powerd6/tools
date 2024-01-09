@@ -33,7 +33,7 @@ impl<F: FileSystem> Command<F> for Initialize {
         self.initialize_authors(&root, fs);
         self.initialize_schema(&root, fs);
         self.initialize_content(&root, fs);
-        trace!("Finished initializing")
+        trace!("Finished initialize")
     }
 }
 
