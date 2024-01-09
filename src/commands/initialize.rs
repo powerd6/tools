@@ -32,7 +32,8 @@ impl<F: FileSystem> Command<F> for Initialize {
         self.initialize_module_file(&root, fs);
         self.initialize_authors(&root, fs);
         self.initialize_schema(&root, fs);
-        debug!("Create contents directory");
+        self.initialize_content(&root, fs);
+        trace!("Finished initializing")
     }
 }
 
@@ -111,16 +112,43 @@ impl Initialize {
             trace!("Creating sample schema");
             let (file_name, contents) = match self.file_type {
                 FileType::Json => (
-                    "schema.json",
+                    "sample.json",
                     include_str!("../../fixtures/commands/initialize/schema.json"),
                 ),
                 FileType::Yaml => (
-                    "schema.yaml",
+                    "sample.yaml",
                     include_str!("../../fixtures/commands/initialize/schema.yaml"),
                 ),
             };
             fs.create_file(&dir.join(file_name), contents)
                 .expect("Sample schema file could not be created");
+        }
+    }
+
+    fn initialize_content(&self, root: &PathBuf, fs: &impl FileSystem) {
+        trace!("Initializing content directory");
+        let dir = fs.create_dir_if_not_exists(&root.join("content")).unwrap();
+
+        let dir_children = fs.get_dir_children(dir.as_ref());
+        debug!(
+            "Content directory has {} files",
+            dir_children.clone().map_or(0, |v| v.len())
+        );
+
+        if dir_children.is_none() {
+            trace!("Creating sample content");
+            let (file_name, contents) = match self.file_type {
+                FileType::Json => (
+                    "content.json",
+                    include_str!("../../fixtures/commands/initialize/content.json"),
+                ),
+                FileType::Yaml => (
+                    "content.yaml",
+                    include_str!("../../fixtures/commands/initialize/content.yaml"),
+                ),
+            };
+            fs.create_file(&dir.join(file_name), contents)
+                .expect("Sample content file could not be created");
         }
     }
 }
