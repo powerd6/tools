@@ -2,6 +2,7 @@
     "recommendations": [
         "streetsidesoftware.code-spell-checker",
         "rust-lang.rust-analyzer",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "tamasfe.even-better-toml"
     ]
 }
