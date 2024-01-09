@@ -14,6 +14,24 @@ permissions:
     contents: read
 
 jobs:
+  markdown-lint:
+    name: Markdown lint
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v3
+        - uses: DavidAnson/markdownlint-cli2-action@v13
+          with:
+            globs: |
+              **/*.md
+              #**/.terraform/**/*.md
+  markdown-link-check:
+    name: Markdown Link Check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: yes
   action-lint:
     name: Action Lint
     runs-on: ubuntu-latest
