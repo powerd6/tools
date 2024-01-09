@@ -6,5 +6,37 @@
     "simplelog",
     "testdir"
   ],
-  "git.enableCommitSigning": true
+  "git.enableCommitSigning": true,
+  "json.schemas": [
+    {
+      "fileMatch": [
+        "/fixtures/commands/initialize/module.json"
+      ],
+      "url": "https://spec.powerd6.org/schemas/module-meta.schema.json"
+    },
+    {
+      "fileMatch": [
+        "/fixtures/commands/initialize/author.json"
+      ],
+      "url": "https://spec.powerd6.org/schemas/authorship.schema.json"
+    },
+    {
+      "fileMatch": [
+        "/fixtures/commands/initialize/content.json"
+      ],
+      "url": "https://spec.powerd6.org/schemas/content.schema.json"
+    },
+    {
+      "fileMatch": [
+        "/fixtures/commands/initialize/schema.json"
+      ],
+      "url": "https://spec.powerd6.org/schemas/schema.schema.json"
+    },
+  ],
+  "yaml.schemas": {
+    "https://spec.powerd6.org/schemas/module-meta.schema.json": "fixtures/commands/initialize/module.yaml",
+    "https://spec.powerd6.org/schemas/authorship.schema.json": "fixtures/commands/initialize/author.yaml",
+    "https://spec.powerd6.org/schemas/content.schema.json": "fixtures/commands/initialize/content.yaml",
+    "https://spec.powerd6.org/schemas/schema.schema.json": "fixtures/commands/initialize/schema.yaml",
+  }
 }
