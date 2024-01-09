@@ -29,7 +29,6 @@ impl<F: FileSystem> Command<F> for Initialize {
         let root = self.initialize_root(fs);
         self.initialize_module_file(&root, fs);
         self.initialize_authors(&root, fs);
-        debug!("Create authors directory");
         debug!("Create schema directory");
         debug!("Create contents directory");
     }
