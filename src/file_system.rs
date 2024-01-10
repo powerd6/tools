@@ -42,32 +42,32 @@ pub(crate) enum FileSystemError {
 
 pub(crate) mod real_file_system;
 
-use mockall::mock;
-/*
-    Since mockall does not allow you to "un-mock" a method of a mocked impl,
-    and the `FileSystem` trait has default implementations for some methods,
-    this is required instead of an `#[automock]` property.
-
-    Reference: https://github.com/asomers/mockall/issues/454
-*/
-mock! {
-    FileSystem{}
-    impl FileSystem for FileSystem{
-        fn dir_exists(&self, path: &Path) -> bool;
-        fn create_dir(&self, path: &Path) -> Result<PathBuf, FileSystemError>;
-        fn file_exists(&self, path: &Path) -> bool;
-        fn create_file(&self, path: &Path, contents: &str) -> Result<PathBuf, FileSystemError>;
-        fn get_dir_children(&self, path: &Path) -> Option<Vec<PathBuf>>;
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
+    use mockall::mock;
+    /*
+        Since mockall does not allow you to "un-mock" a method of a mocked impl,
+        and the `FileSystem` trait has default implementations for some methods,
+        this is required instead of an `#[automock]` property.
+
+        Reference: https://github.com/asomers/mockall/issues/454
+    */
+    mock! {
+        FileSystem{}
+        impl FileSystem for FileSystem{
+            fn dir_exists(&self, path: &Path) -> bool;
+            fn create_dir(&self, path: &Path) -> Result<PathBuf, FileSystemError>;
+            fn file_exists(&self, path: &Path) -> bool;
+            fn create_file(&self, path: &Path, contents: &str) -> Result<PathBuf, FileSystemError>;
+            fn get_dir_children(&self, path: &Path) -> Option<Vec<PathBuf>>;
+        }
+    }
+
+    use std::path::{Path, PathBuf};
 
     use crate::file_system::FileSystem;
 
-    use super::MockFileSystem;
+    use super::FileSystemError;
 
     #[test]
     fn it_creates_directory_if_missing() {
