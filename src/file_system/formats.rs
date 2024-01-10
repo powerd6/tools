@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-#[derive(Debug, PartialEq)]
+use phf::{phf_ordered_map, OrderedMap};
+
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Format {
     Json,
     Yaml,
@@ -9,14 +11,22 @@ pub(crate) enum Format {
 
 impl From<PathBuf> for Format {
     fn from(value: PathBuf) -> Self {
-        match value.extension().and_then(|e| e.to_str()) {
-            Some("json") => Format::Json,
-            Some("yaml") | Some("yml") => Format::Yaml,
-            Some("md") | Some("txt") => Format::Plaintext,
-            _ => panic!("Unsupported file format"),
-        }
+        value
+            .extension()
+            .and_then(|e| e.to_str())
+            .and_then(|ext| EXTENSIONS.get(ext))
+            .unwrap()
+            .clone()
     }
 }
+
+static EXTENSIONS: OrderedMap<&str, Format> = phf_ordered_map! {
+    "json" => Format::Json,
+    "yaml" => Format::Yaml,
+    "yml" => Format::Yaml,
+    "txt" => Format::Plaintext,
+    "md" => Format::Plaintext,
+};
 
 trait FormatData {
     fn get_data() {
