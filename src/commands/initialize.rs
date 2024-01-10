@@ -7,7 +7,7 @@ use crate::file_system::FileSystem;
 
 use super::Command;
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 /// Initializes a directory for a powerd6 module
 pub(crate) struct Initialize {
     /// The path of the directory to be initialized
@@ -17,7 +17,7 @@ pub(crate) struct Initialize {
     #[arg(short, long, value_enum, default_value_t=FileType::Yaml)]
     file_type: FileType,
 }
-#[derive(Clone, ValueEnum)]
+#[derive(Clone, ValueEnum, Debug)]
 enum FileType {
     /// The more compact format, closer to what will be distributed
     Json,
@@ -27,7 +27,7 @@ enum FileType {
 
 impl<F: FileSystem> Command<F> for Initialize {
     fn execute(&self, fs: &F) {
-        trace!("Executing initialize");
+        trace!("Executing initialize: {:#?}", &self);
         let root = self.initialize_root(fs);
         self.initialize_module_file(&root, fs);
         self.initialize_authors(&root, fs);
