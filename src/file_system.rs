@@ -29,6 +29,9 @@ pub(crate) trait FileSystem {
             self.create_file(path, contents)
         }
     }
+    fn has_file_named(&self, path: &Path, name: &str) -> Option<PathBuf> {
+        todo!()
+    }
 
     fn get_dir_children(&self, path: &Path) -> Option<Vec<PathBuf>>;
 }

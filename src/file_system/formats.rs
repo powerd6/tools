@@ -13,9 +13,14 @@ impl From<PathBuf> for Format {
             Some("json") => Format::Json,
             Some("yaml") | Some("yml") => Format::Yaml,
             Some("md") | Some("txt") => Format::Plaintext,
-            // TODO: Consider not panicking here and implementing TryFrom instead
             _ => panic!("Unsupported file format"),
         }
+    }
+}
+
+trait FormatData {
+    fn get_data() {
+        todo!("Determine return value and implement variants");
     }
 }
 
