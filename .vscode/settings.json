@@ -3,6 +3,7 @@
     "automock",
     "mockall",
     "powerd6",
+    "rstest",
     "simplelog",
     "testdir"
   ],
