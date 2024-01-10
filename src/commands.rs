@@ -6,8 +6,8 @@ trait Command<F: FileSystem> {
     fn execute(&self, _: &F);
 }
 
-mod initialize;
 mod assemble;
+mod initialize;
 
 #[derive(Subcommand)]
 pub(crate) enum Commands {
