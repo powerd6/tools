@@ -30,7 +30,7 @@ pub(crate) trait FileSystem {
         }
     }
     fn has_file_named(&self, path: &Path, name: &str) -> Option<PathBuf> {
-        todo!()
+        todo!("for all possible extensions, check if any file exists and return the path to the first file found")
     }
 
     fn get_dir_children(&self, path: &Path) -> Option<Vec<PathBuf>>;
