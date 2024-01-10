@@ -25,8 +25,7 @@ jobs:
     name: Prepare release
     runs-on: ubuntu-latest
     outputs:
-      current: ${{ steps.current.outputs.version }}
-      next: ${{ steps.next.outputs.version }}
+      version: ${{ steps.version.outputs.next_tag }}
       branch: ${{ steps.branch.outputs.branch }}
     env:
       GITHUB_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
@@ -44,29 +43,17 @@ jobs:
         run: echo "branch=release${{ github.run_id }}" >> "$GITHUB_OUTPUT"
       - name: Create branch
         run: git checkout -b "${{ steps.branch.outputs.branch }}"
-      - name: Install semver-cli
-        run: |-
-          go install github.com/maykonlf/semver-cli/cmd/semver@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-      - name: Get current version
-        id: current
-        run: echo "version=$(semver get release)" >> "$GITHUB_OUTPUT"
-      - name: Get next version
-        id: next
-        env:
-          FLAG: ${{ inputs.release_type == 'patch' && 'release' || inputs.release_type}}
-        run: |-
-          semver up "$FLAG"
-          echo "version=$(semver get release)" >> "$GITHUB_OUTPUT"
-          git add .semver.yaml
-          git commit -m "update .semver.yaml"
+      - uses: powerd6/.github/.github/actions/version_bump@main
+        id: version
+        with:
+          release_type: ${{ inputs.release_type }}
       - name: Prepare environment variables
         run: |-
           {
-            echo "CURRENT=${{steps.current.outputs.version}}"
-            echo "NEXT=${{steps.next.outputs.version}}"
-            echo "CURRENT_CARGO=$(echo '${{ steps.current.outputs.version }}' | sed 's/v//')"
-            echo "NEXT_CARGO=$(echo '${{steps.next.outputs.version}}' | sed 's/v//')"
+            echo "CURRENT=${{steps.version.outputs.current_tag}}"
+            echo "NEXT=${{steps.version.outputs.next_tag}}"
+            echo "CURRENT_CARGO=${{steps.version.outputs.current_number}}"
+            echo "NEXT_CARGO=${{steps.version.outputs.next_number}}"
           } >> "$GITHUB_ENV"
       - name: update Cargo.toml
         run: |-
@@ -93,66 +80,12 @@ jobs:
           git commit -m "update CHANGELOG.md"
       - name: Push changes
         run: git push -u origin "${{ steps.branch.outputs.branch }}"
-  pr:
-    name: Create Pull Request
-    runs-on: ubuntu-latest
+  release:
     needs:
       - prepare
-    outputs:
-      pr: ${{ steps.pr.outputs.link }}
-    env:
-      NEXT: ${{needs.prepare.outputs.next}}
-      GITHUB_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{needs.prepare.outputs.branch}}
-      - name: Create Pull Request
-        id: pr
-        run: |-
-          PR_URL=$(gh pr create --title "chore: prepare release for $NEXT" --body "")
-          echo "link=$PR_URL" >> "$GITHUB_OUTPUT"
-      - name: Document
-        run: |-
-          echo "[PR link](${{ steps.pr.outputs.link }})" >> "$GITHUB_STEP_SUMMARY"
-  merge:
-    name: Merge Pull Request
-    runs-on: ubuntu-latest
-    needs: pr
-    env:
-      PR_URL: ${{needs.pr.outputs.pr}}
-      GITHUB_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Merge PR
-        run: gh pr merge "$PR_URL" --admin --squash
-  draft:
-    name: Draft release
-    runs-on: ubuntu-latest
-    needs:
-      - prepare
-      - merge
-    outputs:
-      release: ${{ steps.release.outputs.link }}
-    env:
-      NEXT: ${{needs.prepare.outputs.next}}
-      GITHUB_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Create Release
-        id: release
-        run: |-
-          RELEASE_URL=$(gh release create "$NEXT" \
-          --target main \
-          --title "$NEXT" \
-          --generate-notes \
-          --latest \
-          --draft)
-          echo "link=$RELEASE_URL" >> "$GITHUB_OUTPUT"
-      - name: Document
-        run: |-
-          echo "[Release link](${{ steps.release.outputs.link }})" >> "$GITHUB_STEP_SUMMARY"
-
-
-        
-
+    uses: powerd6/.github/.github/workflows/s_draft_release.yml@main
+    with:
+      version_tag: ${{ needs.prepare.outputs.version }}
+      branch: ${{ needs.prepare.outputs.branch }}
+    secrets:
+      GH_ADMIN_TOKEN: ${{ secrets.GH_ADMIN_TOKEN }}
