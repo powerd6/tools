@@ -14,6 +14,9 @@ categories = ["command-line-utilities"]
 [dependencies]
 clap = { version = "4.4.13", features = ["derive"] }
 log = "0.4.20"
-mockall = "0.12.1"
 simplelog = "0.12.1"
+mockall = "0.12.1"
+
+[dev-dependencies]
+rstest = "0.18.2"
 testdir = "0.9.1"

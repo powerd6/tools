@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 
 use log::trace;
 
+mod formats;
 pub(crate) trait FileSystem {
     fn dir_exists(&self, path: &Path) -> bool;
     fn create_dir(&self, path: &Path) -> Result<PathBuf, FileSystemError>;
