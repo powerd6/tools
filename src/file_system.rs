@@ -2,6 +2,8 @@ use std::path::{Path, PathBuf};
 
 use log::trace;
 
+use self::formats::EXTENSIONS;
+
 mod formats;
 pub(crate) trait FileSystem {
     fn dir_exists(&self, path: &Path) -> bool;
@@ -30,7 +32,10 @@ pub(crate) trait FileSystem {
         }
     }
     fn has_file_named(&self, path: &Path, name: &str) -> Option<PathBuf> {
-        todo!("for all possible extensions, check if any file exists and return the path to the first file found")
+        EXTENSIONS
+            .keys()
+            .map(|k| path.join(format!("{}.{}", name, k)))
+            .find(|p| self.file_exists(p))
     }
 
     fn get_dir_children(&self, path: &Path) -> Option<Vec<PathBuf>>;
@@ -112,5 +117,20 @@ mod tests {
         assert!(mock_fs
             .create_file_if_not_exists(Path::new("./file"), "")
             .is_ok())
+    }
+    #[test]
+
+    fn it_finds_a_file_that_exists() {
+        let mut mock_fs = MockFileSystem::new();
+        mock_fs.expect_file_exists().return_const(true);
+
+        assert!(mock_fs.has_file_named(Path::new("./"), "file").is_some())
+    }
+    #[test]
+    fn it_fails_if_no_file_has_that_name() {
+        let mut mock_fs = MockFileSystem::new();
+        mock_fs.expect_file_exists().return_const(false);
+
+        assert!(mock_fs.has_file_named(Path::new("./"), "file").is_none())
     }
 }

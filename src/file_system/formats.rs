@@ -20,7 +20,7 @@ impl From<PathBuf> for Format {
     }
 }
 
-static EXTENSIONS: OrderedMap<&str, Format> = phf_ordered_map! {
+pub(crate) static EXTENSIONS: OrderedMap<&str, Format> = phf_ordered_map! {
     "json" => Format::Json,
     "yaml" => Format::Yaml,
     "yml" => Format::Yaml,
