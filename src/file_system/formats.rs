@@ -8,6 +8,11 @@ pub(crate) enum Format {
     Yaml,
     Plaintext,
 }
+impl Format {
+    pub(crate) fn get_data(&self, file: &PathBuf) -> () {
+        todo!("Determine return value and implement variants");
+    }
+}
 
 impl From<PathBuf> for Format {
     fn from(value: PathBuf) -> Self {
@@ -27,12 +32,6 @@ pub(crate) static EXTENSIONS: OrderedMap<&str, Format> = phf_ordered_map! {
     "txt" => Format::Plaintext,
     "md" => Format::Plaintext,
 };
-
-trait FormatData {
-    fn get_data() {
-        todo!("Determine return value and implement variants");
-    }
-}
 
 #[cfg(test)]
 mod tests {
