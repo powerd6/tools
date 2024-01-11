@@ -10,6 +10,8 @@ use crate::{
 mod commands;
 mod file_system;
 
+mod module;
+
 #[derive(Parser)]
 #[command(version, about)]
 struct Cli {
